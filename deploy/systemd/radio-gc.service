@@ -1,0 +1,14 @@
+[Unit]
+Description=Radio appliance retention (radio-job gc)
+Documentation=https://github.com/The-Replacement/docs/blob/main/autonomy/02-design.md
+After=docker.service
+
+[Service]
+Type=oneshot
+User=kbdejavu
+WorkingDirectory=/home/kbdejavu/servers/radio
+ExecStart=/home/kbdejavu/servers/radio/scripts/radio-job.sh gc
+# Retention is I/O work on a box that streams 24/7: stay out of the audio path.
+Nice=15
+IOSchedulingClass=idle
+TimeoutStartSec=15min

@@ -1,0 +1,12 @@
+[Unit]
+Description=Nightly retention for the radio appliance
+
+[Timer]
+# 04:30 local: after the 04:00 Jellyfin EPG job (until that moves off the box)
+# and outside every render window.
+OnCalendar=*-*-* 04:30:00
+Persistent=true
+RandomizedDelaySec=10min
+
+[Install]
+WantedBy=timers.target

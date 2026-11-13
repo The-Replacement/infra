@@ -1,0 +1,14 @@
+[Unit]
+Description=Radio appliance status probe (data/status.json)
+Documentation=https://github.com/The-Replacement/docs/blob/main/autonomy/02-design.md
+After=docker.service
+
+[Service]
+Type=oneshot
+User=kbdejavu
+WorkingDirectory=/home/kbdejavu/servers/radio
+ExecStart=/home/kbdejavu/servers/radio/scripts/radio-job.sh verify
+# Cheap: two docker exec, one curl, a few reads. It must never queue behind
+# batch work, so it gets no nice value and a short timeout.
+Nice=-5
+TimeoutStartSec=60s
