@@ -1,6 +1,6 @@
 # infra
 
-Deploy, monitoring, runbooks and backup for The-Replacement projects.
+Deploy, monitoring and runbooks for The-Replacement projects.
 
 The production radio host is a single always-on Ubuntu Server box on the LAN
 (`192.168.100.148`, hostname `mainframe`). It runs the radio stack as Docker
@@ -10,11 +10,9 @@ Compose. It has been offline since it overheated and hit memory limits; see
 ## Layout
 
 ```
-deploy/       bootstrap, environment templates, systemd units
+deploy/       bootstrap, environment templates, systemd units, host audit
 monitoring/   metrics, alert rules, dashboards, heartbeat
 runbooks/     what to do when something is broken
-backup/       what is backed up, where, and how to restore it
-docs/         design notes and research that do not fit a runbook
 ```
 
 ## Ground rules
@@ -25,6 +23,11 @@ docs/         design notes and research that do not fit a runbook
   after reading what it does.
 - **A runbook that has never been executed is a guess.** Each one says when it
   was last exercised against the real host.
+- **There is no backup job, on purpose.** The station's content is deterministic:
+  it is regenerated from seeds, so copying it would be copying a recomputable
+  answer. The two things that are *not* derivable are `data/indiegen/state.json`
+  (the seed cursor) and `.env` + `secrets/tokens.txt` — kilobytes, not gigabytes.
+  Reasoning: `The-Replacement/docs/autonomy/04-disposability.md`.
 
 ## Runbooks
 
