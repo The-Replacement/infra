@@ -1,0 +1,344 @@
+
+=== host ========================================================
+date_utc:      2026-11-13T21:59:10Z
+hostname:      mainframe
+kernel:        Linux 7.3.0-10-generic x86_64
+uptime:        21:59:10 up 4 min,  2 users,  load average: 0.47, 0.24, 0.09
+loadavg:       0.47 0.24 0.09 1/505 5142
+distro:        Ubuntu 26.10
+boot_time:     2026-11-13 21:55:06
+wm/desktop:    none (headless or unset)
+firmware:      UEFI
+
+=== cpu =========================================================
+  CPU(s):                                  8
+  Model name:                              11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz
+  Thread(s) per core:                      2
+  Core(s) per socket:                      4
+  Socket(s):                               1
+  CPU max MHz:                             4700.0000
+  CPU min MHz:                             400.0000
+  Virtualization:                          VT-x
+  L3 cache:                                12 MiB (1 instance)
+  governor(s): powersave powersave powersave powersave powersave powersave powersave powersave 
+  frequency policy: intel_pstate
+  pressure (cpu): some avg10=0.00 avg60=0.03 avg300=0.05 total=578449 full avg10=0.00 avg60=0.00 avg300=0.00 total=0 
+
+=== memory ======================================================
+  MemTotal:       32032024 kB
+  MemFree:        29967348 kB
+  MemAvailable:   30665708 kB
+  Buffers:           71568 kB
+  Cached:          1038948 kB
+  SwapTotal:       8388604 kB
+  SwapFree:        8388604 kB
+  Dirty:              1828 kB
+  CommitLimit:    24404616 kB
+  Committed_AS:    3390296 kB
+  pressure (memory): some avg10=0.00 avg60=0.00 avg300=0.00 total=1 full avg10=0.00 avg60=0.00 avg300=0.00 total=1 
+  pressure (io):     some avg10=0.16 avg60=0.62 avg300=0.44 total=2342532 full avg10=0.14 avg60=0.55 avg300=0.39 total=2185059 
+  overcommit_memory: 0
+  swappiness:        60
+  NAME      TYPE SIZE USED PRIO
+  /swap.img file   8G   0B   -1
+  zram: not present
+  top 5 by RSS:
+       258 MB  jellyfin
+       120 MB  liquidsoap
+       116 MB  indiegen
+       101 MB  dockerd
+        95 MB  searxng
+
+=== thermal =====================================================
+  (lm-sensors not installed: reading raw sysfs)
+  INT3400 Thermal: 20.0 C
+  SEN1: 39.0 C
+  SEN2: 43.0 C
+  SEN3: 35.0 C
+  SEN4: 0.1 C
+  TCPU: -273.1 C 0=110C 1=110C 2=110C
+  iwlwifi_1: 41.0 C
+  x86_pkg_temp: 43.0 C
+  nvme: Composite=24.9C Sensor 2=24.9C
+  thinkpad: CPU=43.0C GPU=40.0C temp3=35.0C fan1=0rpm fan2=0rpm
+  iwlwifi_1: temp1=41.0C
+  coretemp: Package id 0=42.0C Core 0=40.0C Core 1=39.0C Core 2=39.0C Core 3=39.0C
+  throttle events this boot:
+    Nov 13 21:55:07 localhost.localdomain kernel: CPU0: Thermal monitoring enabled (TM1)
+    Nov 13 21:55:07 localhost.localdomain kernel: thermal_sys: Registered thermal governor 'fair_share'
+    Nov 13 21:55:07 localhost.localdomain kernel: thermal_sys: Registered thermal governor 'bang_bang'
+    Nov 13 21:55:07 localhost.localdomain kernel: thermal_sys: Registered thermal governor 'step_wise'
+    Nov 13 21:55:07 localhost.localdomain kernel: thermal_sys: Registered thermal governor 'user_space'
+    Nov 13 21:55:07 localhost.localdomain kernel: thermal_sys: Registered thermal governor 'power_allocator'
+    Nov 13 21:55:43 mainframe kernel: proc_thermal 0000:00:04.0: enabling device (0000 -> 0002)
+
+=== disk ========================================================
+  Filesystem      Size  Used Avail Use% Mounted on
+  /dev/dm-1       914G   93G  783G  11% /
+  efivarfs        246K  118K  123K  49% /sys/firmware/efi/efivars
+  /dev/loop0       67M   67M     0 100% /snap/core24/2124
+  /dev/loop1      1.7M  1.7M     0 100% /snap/hwctl/131
+  /dev/loop2       45M   45M     0 100% /snap/snapd/28254
+  /dev/nvme0n1p2  2.0G   98M  1.7G   6% /boot
+  /dev/nvme0n1p1  1.1G  6.4M  1.1G   1% /boot/efi
+  inodes:
+  Filesystem       Inodes  IUsed    IFree IUse% Mounted on
+  /dev/dm-1      60850176 514198 60335978    1% /
+  efivarfs              0      0        0     - /sys/firmware/efi/efivars
+  /dev/loop0        10477  10477        0  100% /snap/core24/2124
+  /dev/loop1           88     88        0  100% /snap/hwctl/131
+  /dev/loop2          622    622        0  100% /snap/snapd/28254
+  /dev/nvme0n1p2   131072    334   130738    1% /boot
+  /dev/nvme0n1p1        0      0        0     - /boot/efi
+  largest directories under /var and /home (depth 1):
+  54G	/home/kbdejavu
+  54G	/home
+  581M	/var
+  295M	/var/lib
+  170M	/var/cache
+  116M	/var/log
+  1016K	/var/backups
+  44K	/var/snap
+  32K	/var/tmp
+  16K	/var/spool
+  4.0K	/var/opt
+  4.0K	/var/mail
+  docker root:
+    /var/lib/docker
+    size: needs root
+  journal size: unknown (journalctl --disk-usage failed)
+  files >100MB outside /proc /sys /usr /opt:
+    311M  /home/kbdejavu/Models/kokoro/kokoro-v1.0.onnx
+    344M  /home/kbdejavu/media/shows/Los Simuladores (2002)/Season 01/Los Simuladores S01E05.avi
+    344M  /home/kbdejavu/media/shows/Los Simuladores (2002)/Season 01/Los Simuladores S01E04.avi
+    344M  /home/kbdejavu/media/shows/Los Simuladores (2002)/Season 01/Los Simuladores S01E02.avi
+    343M  /home/kbdejavu/media/shows/Los Simuladores (2002)/Season 01/Los Simuladores S01E12.avi
+    344M  /home/kbdejavu/media/shows/Los Simuladores (2002)/Season 01/Los Simuladores S01E01.avi
+    342M  /home/kbdejavu/media/shows/Los Simuladores (2002)/Season 01/Los Simuladores S01E06.avi
+    343M  /home/kbdejavu/media/shows/Los Simuladores (2002)/Season 01/Los Simuladores S01E10.avi
+    342M  /home/kbdejavu/media/shows/Los Simuladores (2002)/Season 01/Los Simuladores S01E08.avi
+    343M  /home/kbdejavu/media/shows/Los Simuladores (2002)/Season 01/Los Simuladores S01E11.avi
+    342M  /home/kbdejavu/media/shows/Los Simuladores (2002)/Season 01/Los Simuladores S01E13.avi
+    342M  /home/kbdejavu/media/shows/Los Simuladores (2002)/Season 01/Los Simuladores S01E07.avi
+    342M  /home/kbdejavu/media/shows/Los Simuladores (2002)/Season 01/Los Simuladores S01E09.avi
+    344M  /home/kbdejavu/media/shows/Los Simuladores (2002)/Season 01/Los Simuladores S01E03.avi
+    330M  /home/kbdejavu/media/shows/Los Simuladores (2002)/Season 02/Los Simuladores S02E02.avi
+    369M  /home/kbdejavu/media/shows/Los Simuladores (2002)/Season 02/Los Simuladores S02E05.avi
+    319M  /home/kbdejavu/media/shows/Los Simuladores (2002)/Season 02/Los Simuladores S02E03.avi
+    360M  /home/kbdejavu/media/shows/Los Simuladores (2002)/Season 02/Los Simuladores S02E09.avi
+    339M  /home/kbdejavu/media/shows/Los Simuladores (2002)/Season 02/Los Simuladores S02E07.avi
+    358M  /home/kbdejavu/media/shows/Los Simuladores (2002)/Season 02/Los Simuladores S02E04.avi
+
+=== systemd =====================================================
+  failed units:
+    ● systemd-networkd-wait-online.service loaded failed failed Wait for Network to be Online
+  running services (non-system):
+    bolt.service
+    chrony.service
+    cloudflared.service
+    containerd.service
+    docker.service
+    ModemManager.service
+    multipathd.service
+    netplan-wpa-wlp0s20f3.service
+    transmission-daemon.service
+    unattended-upgrades.service
+    user@1000.service
+    wpa_supplicant.service
+  enabled timers:
+    Fri 2026-11-13 22:00:00 UTC      47s -                           - sysstat-collect.timer          sysstat-collect.service
+    Fri 2026-11-13 22:00:42 UTC 1min 29s -                           - update-notifier-download.timer update-notifier-download.service
+    Fri 2026-11-13 22:05:05 UTC     5min Fri 2026-11-13 18:34:40 UTC - upki-fetch.timer               upki-fetch.service
+    Fri 2026-11-13 22:10:05 UTC    10min -                           - systemd-tmpfiles-clean.timer   systemd-tmpfiles-clean.service
+    Fri 2026-11-13 22:13:18 UTC    14min Fri 2026-11-13 19:25:55 UTC - fwupd-refresh.timer            fwupd-refresh.service
+    Sat 2026-11-14 00:00:00 UTC  2h 0min Fri 2026-11-13 00:00:00 UTC - dpkg-db-backup.timer           dpkg-db-backup.service
+    Sat 2026-11-14 00:00:00 UTC  2h 0min -                           - sysstat-rotate.timer           sysstat-rotate.service
+    Sat 2026-11-14 00:07:00 UTC  2h 7min -                           - sysstat-summary.timer          sysstat-summary.service
+    Sat 2026-11-14 00:08:25 UTC  2h 9min Fri 2026-11-13 00:40:05 UTC - logrotate.timer                logrotate.service
+    Sat 2026-11-14 00:10:27 UTC 2h 11min Fri 2026-11-13 08:05:09 UTC - man-db.timer                   man-db.service
+    Sat 2026-11-14 01:38:24 UTC 3h 39min Fri 2026-11-13 13:58:16 UTC - motd-news.timer                motd-news.service
+    Sat 2026-11-14 04:09:50 UTC       6h -                           - cloudflared-update.timer       cloudflared-update.service
+    Sat 2026-11-14 06:56:39 UTC       8h Fri 2026-11-13 08:05:09 UTC - apt-daily-upgrade.timer        apt-daily-upgrade.service
+    Sat 2026-11-14 08:30:48 UTC      10h Fri 2026-11-13 19:06:03 UTC - apt-daily.timer                apt-daily.service
+    Sun 2026-11-15 03:10:39 UTC 1 day 5h Sun 2026-11-08 03:10:34 UTC - e2scrub_all.timer              e2scrub_all.service
+    Sun 2026-11-15 03:10:50 UTC 1 day 5h Sun 2026-11-08 03:10:27 UTC - xfs_scrub_all.timer            xfs_scrub_all.service
+    Mon 2026-11-16 00:50:51 UTC   2 days Mon 2026-11-09 00:30:20 UTC - fstrim.timer                   fstrim.service
+    Tue 2026-11-17 07:21:34 UTC   3 days Tue 2026-11-10 13:14:12 UTC - update-notifier-motd.timer     update-notifier-motd.service
+    -                                  - -                           - apport-autoreport.timer        apport-autoreport.service
+    -                                  - -                           - snapd.snap-repair.timer        snapd.snap-repair.service
+
+=== processes ===================================================
+  top 15 by CPU time:
+        PID %CPU %MEM   RSS     ELAPSED COMMAND
+       3291  8.6  0.3 122536      01:26 /usr/bin/liquidsoap --verbose /etc/radio.liq
+       3330  5.4  0.8 264088      01:26 /jellyfin/jellyfin
+       5133  2.2  0.0  4060       00:02 bash -s
+       3327  1.6  0.3 118764      01:26 /usr/local/bin/python3.15 /usr/local/bin/indiegen serve --audio-dir /music-audio --meta-dir /music-meta --work-dir /var/lib/
+       2640  0.9  0.3 103940      01:27 /usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock
+       4535  0.8  0.3 97440       01:25 searxng worker-1
+          1  0.5  0.0 16112       04:06 /usr/lib/systemd/systemd --switched-root --system --deserialize=59
+       2639  0.5  0.1 41332       01:27 /usr/bin/cloudflared --no-autoupdate --config /etc/cloudflared/config.yml tunnel run
+       5078  0.3  0.0 11620       00:02 sshd-session: kbdejavu [postauth]
+       3320  0.3  0.0  7084       01:26 icecast -c /var/run/icecast/icecast.xml
+       4919  0.3  0.0 12976       00:25 /usr/lib/systemd/systemd --user
+       2650  0.2  0.0 20852       01:27 /usr/bin/transmission-daemon -f --log-level=error
+       2428  0.2  0.2 68464       03:27 /usr/bin/containerd
+       3301  0.1  0.0 27372       01:26 searxng
+       5014  0.1  0.0  7640       00:06 sshd: /usr/sbin/sshd -D [listener] 0 of 10-100 startups
+  processes with oom_score_adj != 0:
+      1737 adj=-250  /usr/lib/systemd/systemd-journald 
+      1779 adj=-1000 /usr/sbin/multipathd -d -s 
+      1796 adj=-1000 /usr/lib/systemd/systemd-udevd 
+      2330 adj=-900  /usr/bin/dbus-broker-launch --scope system --audit 
+      2331 adj=-900  dbus-broker --log 10 --controller 9 --machine-id a82fe64fd3ae49fca2f30a9ae3014c1
+      2346 adj=-900  /usr/lib/snapd/snapd 
+      2428 adj=-999  /usr/bin/containerd 
+      2640 adj=-500  /usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock 
+      3091 adj=-998  /usr/bin/containerd-shim-runc-v2 -namespace moby -id e931d1a7dccf42a5376d55c1d54
+      3092 adj=-998  /usr/bin/containerd-shim-runc-v2 -namespace moby -id b91cf6672d28751f0e15b707285
+      3093 adj=-998  /usr/bin/containerd-shim-runc-v2 -namespace moby -id 0413208beb911d83c8055b277bd
+      3132 adj=-998  /usr/bin/containerd-shim-runc-v2 -namespace moby -id 408f3a5e578e77bfe8f93e7646a
+      3148 adj=-998  /usr/bin/containerd-shim-runc-v2 -namespace moby -id 61ea6bf26af9a922c7928e2b512
+      3207 adj=-998  /usr/bin/containerd-shim-runc-v2 -namespace moby -id 2cc16578fd168a5424534e89555
+      3251 adj=-998  /usr/bin/containerd-shim-runc-v2 -namespace moby -id b0b14f1934d97721ee958e0dff8
+      3465 adj=-500  /usr/bin/docker-proxy -proto tcp -host-ip 0.0.0.0 -host-port 8080 -container-ip 
+      3509 adj=-500  /usr/bin/docker-proxy -proto udp -host-ip 127.0.0.1 -host-port 8189 -container-i
+      3528 adj=-500  /usr/bin/docker-proxy -proto tcp -host-ip 0.0.0.0 -host-port 8090 -container-ip 
+      3535 adj=-500  /usr/bin/docker-proxy -proto tcp -host-ip :: -host-port 8090 -container-ip 172.1
+      3551 adj=-500  /usr/bin/docker-proxy -proto tcp -host-ip 0.0.0.0 -host-port 8443 -container-ip 
+
+=== docker ======================================================
+  server: 29.7.2  api: 1.55
+  containers:
+radio-indiegen	radio-indiegen	Up About a minute	4 hours ago
+radio-caddy	caddy:2-alpine	Up About a minute	9 hours ago
+radio-liquidsoap	savonet/liquidsoap:v2.4.6	Up About a minute	9 hours ago
+radio-cam	radio-cam	Created	9 hours ago
+radio-mario	410687f7648c	Exited (0) 9 hours ago	9 hours ago
+radio-mediamtx	bluenviron/mediamtx:1.21.2	Up About a minute	9 hours ago
+radio-icecast	radio-icecast	Up About a minute (healthy)	9 hours ago
+searxng	1dab138ea70a	Up About a minute (healthy)	7 days ago
+jellyfin	jellyfin/jellyfin:12.1.20260915-010956	Up About a minute (healthy)	7 days ago
+  resource limits (empty = unlimited):
+    /radio-indiegen: mem=0 cpus=0 pids=unlimited restart=unless-stopped
+    /radio-caddy: mem=0 cpus=0 pids=unlimited restart=unless-stopped
+    /radio-liquidsoap: mem=0 cpus=0 pids=unlimited restart=unless-stopped
+    /radio-cam: mem=0 cpus=0 pids=unlimited restart=unless-stopped
+    /radio-mario: mem=0 cpus=0 pids=unlimited restart=no
+    /radio-mediamtx: mem=0 cpus=0 pids=unlimited restart=unless-stopped
+    /radio-icecast: mem=0 cpus=0 pids=unlimited restart=unless-stopped
+    /searxng: mem=0 cpus=0 pids=unlimited restart=unless-stopped
+    /jellyfin: mem=0 cpus=0 pids=unlimited restart=unless-stopped
+  live stats (one shot):
+radio-indiegen	0.01%	84MiB / 30.55GiB	0.27%
+radio-caddy	0.00%	13.06MiB / 30.55GiB	0.04%
+radio-liquidsoap	8.93%	67.31MiB / 30.55GiB	0.22%
+radio-mediamtx	0.00%	13.86MiB / 30.55GiB	0.04%
+radio-icecast	0.32%	2.773MiB / 30.55GiB	0.01%
+searxng	0.00%	99.55MiB / 30.55GiB	0.32%
+jellyfin	0.01%	142.4MiB / 30.55GiB	0.46%
+  disk:
+    TYPE            TOTAL     ACTIVE    SIZE      RECLAIMABLE
+    Images          14        8         8.462GB   1.637GB (19%)
+    Containers      9         7         5.132MB   24.58kB (0%)
+    Local Volumes   8         4         5.225MB   2.732MB (52%)
+    Build Cache     204       0         21.13GB   17.54GB
+  volumes:
+1ddb19c1cfb827a57df6ffd35d9007c0fa64c3dfba498746452fbbd478fb0c99
+5e61fefdf46cdbe2258eccc61873b48c3b1809e86d5e2f502c0eb253af3247b7
+026d93cd9ab81b5b62de732ca1d7a69d150262c8d14a115bec976a0da9818074
+58a94157d0449937de8e1a6f589758920d8e400725e294146f1cf27be24d91a9
+93d0586ecd9c9e5196ca186dae0a26426556a34fd007d1ffe8b305c422742d19
+e83043c41dfc112320d8bd1e8520f0bc7960db52cf812a0c064df182909e5ea4
+ed472dc6dc7457323970983bf9b11b7abe9de2be2925671bfc0612ee8a7a215b
+searxng_searxng-cache
+
+=== network =====================================================
+  Netid State  Recv-Q Send-Q                         Local Address:Port  Peer Address:PortProcess
+  udp   UNCONN 0      0                                 127.0.0.54:53         0.0.0.0:*   
+  udp   UNCONN 0      0                              127.0.0.53%lo:53         0.0.0.0:*   
+  udp   UNCONN 0      0                                  127.0.0.1:323        0.0.0.0:*   
+  udp   UNCONN 0      0                                    0.0.0.0:51413      0.0.0.0:*   
+  udp   UNCONN 0      0                                    0.0.0.0:6771       0.0.0.0:*   
+  udp   UNCONN 0      0                                  127.0.0.1:8189       0.0.0.0:*   
+  udp   UNCONN 0      0                                      [::1]:323           [::]:*   
+  udp   UNCONN 0      0      [fe80::1685:7fff:fe31:ee2b]%wlp0s20f3:546           [::]:*   
+  udp   UNCONN 0      0                                       [::]:51413         [::]:*   
+  udp   UNCONN 0      0                                          *:37124            *:*   
+  udp   UNCONN 0      0                                          *:53786            *:*   
+  udp   UNCONN 0      0                                       [::]:6771          [::]:*   
+  udp   UNCONN 0      0                                          *:56714            *:*   
+  udp   UNCONN 0      0                                          *:59600            *:*   
+  tcp   LISTEN 0      4096                           127.0.0.53%lo:53         0.0.0.0:*   
+  tcp   LISTEN 0      4096                               127.0.0.1:44449      0.0.0.0:*   
+  tcp   LISTEN 0      4096                                 0.0.0.0:22         0.0.0.0:*   
+  tcp   LISTEN 0      4096                                 0.0.0.0:51413      0.0.0.0:*   
+  tcp   LISTEN 0      4096                                 0.0.0.0:8090       0.0.0.0:*   
+  tcp   LISTEN 0      4096                                 0.0.0.0:8080       0.0.0.0:*   
+  tcp   LISTEN 0      4096                              127.0.0.54:53         0.0.0.0:*   
+  tcp   LISTEN 0      128                                  0.0.0.0:9091       0.0.0.0:*   
+  tcp   LISTEN 0      4096                               127.0.0.1:20241      0.0.0.0:*   
+  tcp   LISTEN 0      4096                                 0.0.0.0:8443       0.0.0.0:*   
+  tcp   LISTEN 0      4096                               127.0.0.1:8096       0.0.0.0:*   
+  tcp   LISTEN 0      4096                                    [::]:22            [::]:*   
+  tcp   LISTEN 0      4096                                    [::]:51413         [::]:*   
+  tcp   LISTEN 0      4096                                    [::]:8090          [::]:*   
+  tcp   LISTEN 0      4096                                    [::]:8443          [::]:*   
+  lo               UNKNOWN        127.0.0.1/8 ::1/128 
+  enp4s0           DOWN           
+  wlp0s20f3        UP             192.168.100.148/24 metric 600 fe80::1685:7fff:fe31:ee2b/64 
+  br-8cdd4709cd88  UP             172.19.0.1/16 fe80::d851:5cff:fe97:b3af/64 
+  br-f2519a8a2d5d  UP             172.18.0.1/16 fe80::3866:6aff:fe1a:9bc2/64 
+  docker0          DOWN           172.17.0.1/16 
+  br-482690b7d13c  UP             172.20.0.1/16 fe80::cf:b0ff:fe76:78d3/64 
+  vethf6e2339@if2  UP             fe80::143f:8bff:febf:22b0/64 
+  vethaeb8336@if2  UP             fe80::d84f:eaff:fe75:9782/64 
+  veth266f644@if2  UP             fe80::9095:dcff:fe2c:689b/64 
+  vethbcc2a72@if2  UP             fe80::34e1:28ff:fe01:bf8/64 
+  vethc17a9a8@if2  UP             fe80::60b8:98ff:fe62:4bba/64 
+  vethe7d9490@if2  UP             fe80::1841:57ff:fe72:d2b/64 
+  veth258aaba@if2  UP             fe80::f820:f1ff:fe48:1190/64 
+  default route: default via 192.168.100.1 dev wlp0s20f3 proto dhcp src 192.168.100.148 metric 600 
+
+=== scheduled work ==============================================
+  crontabs:
+    [kbdejavu]
+      0 4 * * * /home/kbdejavu/.config/jellyfin-epg/refresh-guide.sh >> /home/kbdejavu/.config/jellyfin-epg/cron.log 2>&1
+      * * * * * /home/kbdejavu/servers/radio/scripts/restart-on-signal.sh
+      0 * * * * /home/kbdejavu/servers/radio/scripts/mario-refresh.sh
+  /etc/cron.d and cron.daily:
+    /etc/cron.d:
+    e2scrub_all
+    
+    /etc/cron.daily:
+    apport
+    apt-compat
+    dpkg
+    logrotate
+    man-db
+    
+    /etc/cron.hourly:
+  root crontab readable: no (needs root)
+
+=== packages and updates ========================================
+  installed packages: 736
+  manually installed: 28
+  pending upgrades:   9
+  unattended-upgrades: active
+  reboot required:     no
+
+=== radio checkout ==============================================
+  path:   /home/kbdejavu/servers/radio
+  commit: b6d0328
+  dirty:  0 file(s)
+  .env:   644 kbdejavu:kbdejavu
+  deploy log (last 5):
+    #17 DONE 0.1s
+    time="2026-11-13T19:49:56Z" level=warning msg="current commit information was not captured by the build" error="failed to read current commit information with git rev-parse --is-inside-work-tree"
+     mario  Built
+    [2026-11-13T19:50:07Z] mario: build OK en 12s — próximo ciclo horario usa el código nuevo
+    [2026-11-13T19:50:08Z] deploy listo
+  library: 10 audio file(s), 11 meta file(s)
+
+=== end =========================================================
+audit complete: 2026-11-13T21:59:16Z
