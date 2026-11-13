@@ -169,6 +169,8 @@ systemctl list-timers --all --no-pager --no-legend 2>/dev/null | head -20 | sed 
 
 hr "processes"
 echo "  top 15 by CPU time:"
+# The grep drops this very command line, which would otherwise rank first.
+# shellcheck disable=SC2009
 ps -eo pid,pcpu,pmem,rss,etime,args --sort=-pcpu | grep -v 'ps -eo' | head -16 | cut -c1-160 | sed 's/^/    /'
 echo "  processes with oom_score_adj != 0:"
 for p in /proc/[0-9]*; do
@@ -207,12 +209,15 @@ echo "  default route: $(ip route show default 2>/dev/null | head -1)"
 
 hr "scheduled work"
 echo "  crontabs:"
-for u in $(cut -d: -f1 /etc/passwd); do
+# Read the user list line by line: `for u in $(...)` splits on whitespace and
+# would mangle a name containing a space.
+while IFS=: read -r u _rest; do
   out=$(crontab -l -u "$u" 2>/dev/null | grep -vE '^\s*#|^\s*$') || continue
-  [ -n "$out" ] && printf '    [%s]\n%s\n' "$u" "$(echo "$out" | sed 's/^/      /')"
-done
+  [ -n "$out" ] && printf '    [%s]\n%s\n' "$u" "$(printf '%s' "$out" | sed 's/^/      /')"
+done < /etc/passwd
 echo "  /etc/cron.d and cron.daily:"
-ls /etc/cron.d /etc/cron.daily /etc/cron.hourly 2>/dev/null | sed 's/^/    /'
+find /etc/cron.d /etc/cron.daily /etc/cron.hourly -mindepth 1 -maxdepth 1 2>/dev/null \
+  | sed 's/^/    /'
 echo "  root crontab readable: $( [ -r /var/spool/cron/crontabs/root ] && echo yes || echo 'no (needs root)')"
 
 hr "packages and updates"
