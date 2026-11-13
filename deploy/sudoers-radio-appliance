@@ -1,0 +1,26 @@
+# /etc/sudoers.d/radio-appliance
+#
+# Narrow, named permissions so the appliance can maintain itself without a
+# password prompt in the middle of an automated run.
+#
+# Install with:
+#   sudo install -m 0440 -o root -g root deploy/sudoers-radio-appliance \
+#        /etc/sudoers.d/radio-appliance
+#   sudo visudo -c
+#
+# WHY THESE TWO AND NOT MORE
+# `sudo -n -l` on the host currently grants NOPASSWD to apt-get update/upgrade/
+# dist-upgrade. That is broader than it reads: apt-get honours
+# `-o APT::Update::Pre-Invoke::=<command>`, so the rule is effectively
+# NOPASSWD: ALL. (kbdejavu is also in the docker group, which is already
+# root-equivalent on this box.) These two lines replace a hole with something
+# that says what it allows.
+
+# radio-job gc vacuums the journal when it is large. Without this the rule logs
+# SKIP and the journal keeps growing; SystemMaxUse in journald.conf is the other
+# half of the fix.
+kbdejavu ALL=(root) NOPASSWD: /usr/bin/journalctl --vacuum-size=*
+
+# The BuildKit cache is invisible to the legacy builder; without buildx, gc
+# cannot bound the 8.6 GB sitting in /var/lib/docker/buildkit.
+kbdejavu ALL=(root) NOPASSWD: /usr/bin/apt-get install -y docker-buildx-plugin
