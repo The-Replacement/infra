@@ -56,12 +56,12 @@ for g in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
 done
 echo
 printf '  frequency policy: %s\n' "$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_driver 2>/dev/null || echo 'not exposed (VM or locked firmware)')"
-printf '  pressure (cpu): %s\n' "$(cat /proc/pressure/cpu 2>/dev/null | tr '\n' ' ')"
+printf '  pressure (cpu): %s\n' "$(tr '\n' ' ' < /proc/pressure/cpu 2>/dev/null)"
 
 hr "memory"
 grep -E '^(MemTotal|MemFree|MemAvailable|Buffers|Cached|SwapTotal|SwapFree|Dirty|Committed_AS|CommitLimit)' /proc/meminfo | sed 's/^/  /'
-printf '  pressure (memory): %s\n' "$(cat /proc/pressure/memory 2>/dev/null | tr '\n' ' ')"
-printf '  pressure (io):     %s\n' "$(cat /proc/pressure/io 2>/dev/null | tr '\n' ' ')"
+printf '  pressure (memory): %s\n' "$(tr '\n' ' ' < /proc/pressure/memory 2>/dev/null)"
+printf '  pressure (io):     %s\n' "$(tr '\n' ' ' < /proc/pressure/io 2>/dev/null)"
 printf '  overcommit_memory: %s\n' "$(cat /proc/sys/vm/overcommit_memory 2>/dev/null)"
 printf '  swappiness:        %s\n' "$(cat /proc/sys/vm/swappiness 2>/dev/null)"
 if have swapon; then swapon --show | sed 's/^/  /' || note "no swap devices"; fi
