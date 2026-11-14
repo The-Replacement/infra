@@ -45,8 +45,12 @@ ci_check() {
     emit "$(printf 'SKIP  %-16s gh not installed' "$repo")"
     return
   fi
-  out=$(gh run list --repo "$ORG/$repo" --branch "$branch" --limit 1 \
-        --json name,conclusion,status,headSha --jq '.[0] | "\(.name)|\(.conclusion // .status)|\(.headSha[0:7])"' 2>/dev/null)
+  # Several workflows publish runs for the same commit (ci, pages). Report the
+  # gate, not whichever finished last.
+  out=$(gh run list --repo "$ORG/$repo" --branch "$branch" --limit 10 \
+        --json name,conclusion,status,headSha \
+        --jq 'map(select(.name == "ci" or .name == "gate")) | .[0] | "\(.name)|\(.conclusion // .status)|\(.headSha[0:7])"' 2>/dev/null)
+  out=$(printf '%s' "$out" | tr -d '"')
   if [ -z "$out" ]; then
     emit "$(printf 'SKIP  %-16s no runs on %s' "$repo" "$branch")"
     return
