@@ -29,7 +29,9 @@ agent with a key to it.
 
 ## Why the audit is not part of the deploy
 
-The deploy path is `git push mainframe master` (see
-`../runbooks/deploy.md`). The audit is the opposite: it looks at the host as it
-actually is, including everything that did not come from this repository. Keeping
-it out of the deploy hook means it can be run without changing anything.
+The deploy path is a push to the branch each box has checked out —
+`master` for `radio`, `main` for `indiegenerator` (see
+`../runbooks/deploy.md`; the hook fails loudly on any other branch). The audit
+is the opposite: it looks at the host as it actually is, including everything
+that did not come from this repository. Keeping it out of the deploy hook
+means it can be run without changing anything.

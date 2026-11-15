@@ -21,11 +21,15 @@ On the workstation, with the bad commit identified (`git log --oneline`):
 
 ```bash
 git checkout -b rollback/<what> <last-good-sha>
-git push mainframe rollback/<what>:master
+# per repo: radio's box has master checked out, indiegenerator's has main
+git push mainframe rollback/<what>:master      # radio
+git push mainframe rollback/<what>:main        # indiegenerator
 ```
 
 The push into the bare repository moves the host's working tree to that commit,
 and `post-receive` re-runs the same decisions: Caddy reload, image rebuilds.
+The pushed ref must be the branch the box has checked out — the hook fails
+loudly, naming that branch, otherwise (infra#12).
 
 If the host is unreachable, do it on the host:
 
