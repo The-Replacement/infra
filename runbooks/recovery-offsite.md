@@ -49,37 +49,61 @@ password before assuming the rotation worked.
 
 ## 2. Decrypt, when you actually need it
 
-The only listener is `workflow_dispatch`, and it requires the literal word
-`RECOVER`:
+There are **two** gates, not one:
+
+- the literal word `RECOVER`, and
+- the GitHub **environment** `recovery`, whose required reviewer must approve
+  the deployment before any job that can see the secret is allowed to start.
+
+The environment is pinned to `main` and the repository no longer carries a
+repo-level `RADIO_STATE_RECOVERY_KEY`: direct API listing returns zero
+repo-level secrets. That removes the original exfiltration path of "just add a
+workflow that echoes an ambient variable".
+
+There is **no plaintext artifact**. The runner decrypts the committed blob in
+memory and immediately re-encrypts to an RSA public key you supply in the
+`recipient_pem` input, so the only people able to open the artifact are you.
+A collaborator browsing this repo, or an agent acting as you, cannot decrypt
+another recipient's artifact even if they can read it.
+
+Prepare a recovery RSA pair locally (not on GitHub):
 
 ```bash
+umask 077; mkdir -p ~/recovery && cd ~/recovery
+openssl genrsa -out recipient-private.pem 4096
+openssl rsa -in recipient-private.pem -pubout -out recipient-public.pem
+# ssh-keygen users: ssh-keygen -e -m PEM -f ~/.ssh/id_rsa.pub produces the PEM too
+
 gh workflow run recover-restic-password.yml \
-  -R The-Replacement/infra -f confirm=RECOVER
-gh run watch --repo The-Replacement/infra --exit-status   # or watch in the browser
+  -R The-Replacement/infra \
+  -f confirm=RECOVER \
+  -f recipient_pem="$(cat recipient-public.pem)"
+
+# The run will sit 'waiting' until the environment's required reviewer approves.
+gh run watch --repo The-Replacement/infra --exit-status
 ```
 
-The run will:
-
-- write the private key to `/tmp/recovery.pem` inside the runner, decrypt the
-  blob to `restic-password.txt`, delete the key,
-- mask the value (`::add-mask::`), so nothing in the log prints it,
-- print only the SHA-256 fingerprint — compare against
-  `sha256sum ~/.config/radio-backup/restic-password` if you still have it,
-  which proves the recovery key is the correct one without revealing it,
-- upload the decrypted text as artifact `restic-password-recovery`,
-  **retention 1 day**.
-
-Download it with the repository CLI while it is live:
+The log prints only the **ciphertext** size and hash (no secret content). Download
+the 1-day artifact and decrypt it with your own private key:
 
 ```bash
-gh run download <run-id> -n restic-password-recovery -R The-Replacement/infra
+gh run download <run-id> -n restic-password-encrypted -R The-Replacement/infra
+openssl pkeyutl -decrypt -inkey recipient-private.pem \
+  -in restic-password.enc -out restic-password.txt
+chmod 600 restic-password.txt
+# verify:
+cmp restic-password.txt ~/.config/radio-backup/restic-password
 ```
 
-Use the file as `RESTIC_PASSWORD_FILE` when restoring. Delete it afterwards —
-artifacts are deleted by the runner after a day, but your local copy is a copy.
+Use that file as `RESTIC_PASSWORD_FILE`, then delete every local copy:
 
-Never echo the decrypted value into a ticket, a commit or a PR body. If it lands
-in one, the only fix is a password rotation plus a new archive.
+```bash
+shred -u restic-password.txt
+```
+
+If you do not provide a public key, the run fails — deliberately. **A plaintext
+artifact would have been visible to anyone who can read this repo's actions,
+including the agent's token, for a whole day.**
 
 ## 3. The two archive mirrors
 
