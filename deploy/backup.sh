@@ -404,7 +404,11 @@ except Exception:
     raise SystemExit
 if not snaps:
     raise SystemExit
-s = snaps[0]
+# --latest groups by host and paths, and every run stages into its own
+# run-<timestamp> directory, so the reply can hold one snapshot per group.
+# The newest is the one this run just wrote; picking snaps[0] named an older
+# snapshot, which is the ID the drill is supposed to record.
+s = max(snaps, key=lambda snap: snap.get("time", ""))
 print("%s %s" % (s.get("short_id", "?"), s.get("time", "?")))
 ' 2>/dev/null) || summary=""
   log "END backup snapshot ${summary:-unknown} ($files files)"
