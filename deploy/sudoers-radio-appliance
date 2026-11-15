@@ -19,7 +19,13 @@
 # radio-job gc vacuums the journal when it is large. Without this the rule logs
 # SKIP and the journal keeps growing; SystemMaxUse in journald.conf is the other
 # half of the fix.
-kbdejavu ALL=(root) NOPASSWD: /usr/bin/journalctl --vacuum-size=*
+#
+# The size is literal, not a wildcard: sudo rejects wildcards in command
+# arguments, so the old `--vacuum-size=*` made this file invalid and the rule
+# never loaded. It must stay equal to JOURNAL_MAX in
+# radio/scripts/radio-job.sh:67 -- if that constant changes, gc logs SKIP
+# instead of failing, so change both together.
+kbdejavu ALL=(root) NOPASSWD: /usr/bin/journalctl --vacuum-size=1G
 
 # The BuildKit cache is invisible to the legacy builder; without buildx, gc
 # cannot bound the 8.6 GB sitting in /var/lib/docker/buildkit.
