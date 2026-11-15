@@ -34,7 +34,7 @@ If you must rotate, do it in one sitting and delete the local private art:
 umask 077; cd "$(mktemp -d)"
 openssl genrsa -out new.pem 4096
 openssl rsa -in new.pem -pubout -out newpub.pem
-gh secret set RADIO_STATE_RECOVERY_KEY -R The-Replacement/infra < new.pem
+gh secret set RADIO_STATE_RECOVERY_KEY -R The-Replacement/infra --env recovery < new.pem
 openssl pkeyutl -encrypt -pubin -inkey newpub.pem \
   -in ~/.config/radio-backup/restic-password \
   -out restic-password.enc
