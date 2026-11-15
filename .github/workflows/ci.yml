@@ -17,6 +17,16 @@ jobs:
       - name: Lint deploy scripts
         run: shellcheck -x deploy/*.sh
 
+  health-self-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # The parsers are the part of the health check that broke silently last
+      # time: V2 changed the `opencode mcp list` format and the old check read
+      # the change as an outage. The fixtures are the regressions.
+      - name: Health check parsers
+        run: ./deploy/health.sh --self-test
+
   units:
     runs-on: ubuntu-latest
     steps:
