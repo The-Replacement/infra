@@ -78,15 +78,24 @@ expected files exist there.
 In order, it:
 
 1. takes an exclusive lock (`flock` on `$STAGE_DIR/.backup.lock`);
-2. stages every source into `$STAGE_DIR/run-<timestamp>/`, excluding the
+2. prints the effective source list — the same one `plan` shows — so the run
+   announces what it is about to save before it saves it;
+3. stages every source into `$STAGE_DIR/run-<timestamp>/`, excluding the
    regenerable paths above;
-3. copies each SQLite file with the SQLite backup API and runs
+4. copies each SQLite file with the SQLite backup API and runs
    `PRAGMA quick_check` on the copy — a live `cp` of a WAL database is a torn
    file, and a torn backup is not a backup;
-4. runs `restic backup` with the `radio-state` tag and the workstation hostname;
-5. runs `restic check --read-data-subset=$VERIFY_SUBSET`;
-6. applies retention (`forget` + `prune`) to the tagged snapshots;
-7. prints the snapshot ID and removes the staging tree.
+5. runs `restic backup` with the `radio-state` tag and the workstation hostname;
+6. runs `restic check --read-data-subset=$VERIFY_SUBSET`;
+7. applies retention (`forget` + `prune`) to the tagged snapshots;
+8. prints the snapshot ID and removes the staging tree.
+
+Unknown keys in `backup.conf` are warned about by name, with the closest
+known key as a suggestion, and then ignored — an ignored key is a silently
+different backup, so treat every warning as a stop. If `PROJECTS_ROOT`
+matches zero projects (missing directory, or a typo like `PROJECT_ROOT`),
+the run exits non-zero without writing a snapshot: a backup of the
+workstation memory that contains none of it is worse than a failed one.
 
 Success looks like a snapshot line and `no errors were found` from `check`.
 Anything else is a failure: read the last lines of
@@ -135,15 +144,18 @@ restic -r "$RESTIC_REPOSITORY" --password-file "$RESTIC_PASSWORD_FILE" \
 | `OpenCode database not found` | the configured path is wrong, or the install moved | fix `OPENCODE_DATA_DIR`, or unset it to skip on purpose |
 | mainframe staging fails | SSH is down, or `.env`/`secrets/` is missing there | fix the host or the config; a partial radio backup is worse than a loud failure |
 | `staging produced no files` | every source was empty or unset | fix the config; the script will not write an empty snapshot |
-| `sqlite quick_check failed for <file>` | a live SQLite file is malformed; the script refuses to snapshot it | see *When a SQLite source is malformed* below |
+| `PROJECTS_ROOT ... matched no project` | the directory is missing or the key is misspelled | fix `PROJECTS_ROOT`; the run exits without a snapshot instead of backing up "everything else" |
+| `sqlite quick_check failed for <N> file(s)` | one or more live SQLite files are malformed; the script refuses to snapshot any of them and lists every one | see *When a SQLite source is malformed* below |
 
 ### When a SQLite source is malformed
 
-The script runs `PRAGMA quick_check` on every SQLite file it stages and dies on
-the first failure instead of snapshotting a database that is already damaged.
-That is the right default — a backup of a corrupt file looks like coverage and
-is not — but it means **one bad legacy database blocks the whole backup**,
-including the tokens and the seed cursor.
+The script runs `PRAGMA quick_check` on every SQLite file it stages and dies
+without snapshotting a database that is already damaged. It walks every source
+first and reports the complete list of failures in one run — one run per
+defect is how a second corruption hides behind the first (infra#14). That is
+the right default — a backup of a corrupt file looks like coverage and is not
+— but it means **one bad legacy database blocks the whole backup**, including
+the tokens and the seed cursor.
 
 Measured 2026-11-15 on the first real run: `mario/.n3rv/memory/chroma.sqlite3`
 failed with
