@@ -1,0 +1,12 @@
+# N3RV — generated files are never committed. The declared state IS
+# committed: it is the thing a reviewer reads before the generator writes
+# anything. Same split as The-Replacement/radio.
+.n3rv/*
+!.n3rv/state.yaml
+.opencode/
+.githooks/
+.specify/
+AGENTS.md
+constitution.md
+opencode.json
+opencode.template.json
