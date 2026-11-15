@@ -48,8 +48,7 @@ github_copy() {
             --notes 'Ciphertext. Recovery key lives as a secret in The-Replacement/infra.'
     fi
     printf 'github: uploading %s bytes\n' "$(wc -c < "$archive")"
-    gh release upload nightly -R "$ARCHIVE_REPO" \
-        --clobber "radio-state.tar.gz#$archive"
+    gh release upload nightly -R "$ARCHIVE_REPO" --clobber "$archive"
     printf 'github: assets now: %s\n' \
         "$(gh release view nightly -R "$ARCHIVE_REPO" --json assets --jq '[.assets[].name] | join(", ")')"
 }
