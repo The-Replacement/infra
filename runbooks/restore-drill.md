@@ -8,6 +8,21 @@ procedure that turns it into a fact, and the record of when it was last a fact.
 
 **Cadence:** monthly, and after any change to `deploy/backup.sh` or to the set
 of backed-up paths.
+**Last exercised:** 2026-11-15, end to end against a real repository. Snapshot
+`0a552e57` (1015 MiB, 10627 files) restored to `/tmp/radio-restore`:
+
+| Check | Result |
+|---|---|
+| 3.1 memory DBs (`quick_check`) | 7/7 `ok` (after repairing `mario` — see `backup.md`) |
+| 3.2 `n3rv memory stats` (radio) + search | 175/175 memories, search returns real entries |
+| 3.3 OpenCode | integrity `ok`, `wal`, session 173/173, message 14299/14299, part 59238/59238 |
+| 3.4 XERJ auth state | `.xerj_master_key`, `_users`, `_api_tokens`, `_idp_config` … all present |
+| 3.5 modes | `.env` 600, `secrets/tokens.txt` 600 |
+
+That run corrected two bugs in this document: a `-maxdepth` on the `find` (§2)
+and a query against a `sessions` table that has not existed since the schema
+moved to singular table names (§3.3).
+
 **Never against production paths.** Every step below restores to a scratch
 directory. The last section is the separate, deliberate operation that writes
 live.
@@ -54,10 +69,15 @@ The snapshot stores the staging path, so the tree lands at
 `/tmp/radio-restore/<old stage path>/workstation/...`. Set it once:
 
 ```bash
-R=$(find /tmp/radio-restore -maxdepth 6 -type d -name workstation | head -1)
+R=$(find /tmp/radio-restore -type d -name workstation | head -1)
 S=$(dirname "$R")
 printf 'restored tree: %s\n' "$S"
 ```
+
+Do not bound that `find` with `-maxdepth`: the snapshot stores the staging path,
+and with the default staging directory the restored `workstation` sits ten
+levels down. A `-maxdepth 6` silently finds nothing and the next line prints a
+restored tree of `.` — measured on the first real drill, 2026-11-15.
 ## 3. Prove the workstation data is usable
 
 ### 3.1 Every project's memory is a readable database
@@ -93,15 +113,25 @@ n3rv memory search "deploy hook" | head
 
 ```bash
 sqlite3 "$R/opencode/opencode.db" 'PRAGMA integrity_check;'
-sqlite3 "$R/opencode/opencode.db" 'SELECT count(*) FROM sessions;'
 sqlite3 "$R/opencode/opencode.db" 'PRAGMA journal_mode;'
+# Tables are singular in the current schema: there is no `sessions` table.
+for t in session message part; do
+  printf '%-8s restored=%-7s live=%s\n' "$t" \
+    "$(sqlite3 "$R/opencode/opencode.db" "SELECT count(*) FROM \"$t\";")" \
+    "$(sqlite3 ~/.local/share/opencode/opencode.db "SELECT count(*) FROM \"$t\";")"
+done
+sqlite3 "$R/opencode/opencode.db" \
+  'SELECT s.id, count(m.id) FROM session s LEFT JOIN message m ON m.session_id=s.id
+   GROUP BY s.id ORDER BY s.time_updated DESC LIMIT 3;'
 ```
 
-`ok` for integrity, a session count in the same order of magnitude as the live
-database (`sqlite3 ~/.local/share/opencode/opencode.db 'SELECT count(*) FROM
-sessions;'`), and `wal` for the journal mode. Open the newest session ID in the
-restored copy and confirm its messages are not empty: a copy with sessions and
-no messages is a schema without a life.
+`ok` for integrity and `wal` for the journal mode. The three counts should match
+the live database exactly when nothing wrote during the backup — measured
+2026-11-15: `session 173`, `message 14299`, `part 59238`, identical on both
+sides. A count that is merely "the same order of magnitude" is weaker than it
+sounds: it hides a backup that dropped the tail. The last query must show real
+message counts for the newest sessions — a copy with sessions and no messages is
+a schema without a life.
 
 ### 3.4 XERJ state is there, not just the index
 

@@ -5,8 +5,12 @@ encrypted repository that is verified after every write and restorable on
 demand.
 
 **Applies to:** the workstation (control plane) and `mainframe` (radio runtime).
-**Last exercised:** never end to end. Phase 1 backs up and verifies a synthetic
-tree; the first real run is the first real run (see `restore-drill.md`).
+**Last exercised:** 2026-11-15, end to end and for real — the repository
+`~/.local/share/restic-radio` was created, `backup` wrote snapshot `0a552e57`
+(1015 MiB, 10627 files, 21 s), and `restore-drill.md` then restored it and
+checked the contents against the live tree (175/175 memories, 173/173 sessions,
+14299/14299 messages). That run also found a corrupt FTS index in
+`mario/.n3rv` — see *When a SQLite source is malformed* below.
 
 ## What is backed up, and why
 
@@ -131,6 +135,44 @@ restic -r "$RESTIC_REPOSITORY" --password-file "$RESTIC_PASSWORD_FILE" \
 | `OpenCode database not found` | the configured path is wrong, or the install moved | fix `OPENCODE_DATA_DIR`, or unset it to skip on purpose |
 | mainframe staging fails | SSH is down, or `.env`/`secrets/` is missing there | fix the host or the config; a partial radio backup is worse than a loud failure |
 | `staging produced no files` | every source was empty or unset | fix the config; the script will not write an empty snapshot |
+| `sqlite quick_check failed for <file>` | a live SQLite file is malformed; the script refuses to snapshot it | see *When a SQLite source is malformed* below |
+
+### When a SQLite source is malformed
+
+The script runs `PRAGMA quick_check` on every SQLite file it stages and dies on
+the first failure instead of snapshotting a database that is already damaged.
+That is the right default — a backup of a corrupt file looks like coverage and
+is not — but it means **one bad legacy database blocks the whole backup**,
+including the tokens and the seed cursor.
+
+Measured 2026-11-15 on the first real run: `mario/.n3rv/memory/chroma.sqlite3`
+failed with
+
+```
+malformed inverted index for FTS5 table main.embedding_fulltext_search
+```
+
+A malformed FTS5 index is repairable and the repair is lossless, because the
+index is derived from rows that are still there:
+
+```bash
+# 1. keep the broken file as evidence before touching it
+cp <file> /tmp/evidence-corrupt-$(date +%Y%m%d).sqlite3
+
+# 2. rebuild the derived index in place (no file swap: keeps mode and handles)
+sqlite3 <file> "INSERT INTO embedding_fulltext_search(embedding_fulltext_search) VALUES('rebuild');"
+
+# 3. prove it
+sqlite3 <file> 'PRAGMA quick_check;'   # must print ok
+sqlite3 <file> 'SELECT count(*) FROM embeddings;'  # must equal the pre-repair count
+```
+
+Then re-run `./deploy/backup.sh backup`. If `quick_check` still fails after a
+rebuild, the damage is in the content tables, not the index: restore that file
+from an older snapshot or accept its loss for that project only and record it.
+
+Finding it in a backup run rather than a restore is the whole point — the
+alternative is discovering it on the day the only copy is the broken one.
 
 **Losing the password loses the repository.** There is no recovery path and
 adding one would defeat the encryption. Keep the password in the password
