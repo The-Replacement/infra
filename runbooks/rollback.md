@@ -59,7 +59,7 @@ docker compose -f ~/servers/radio/docker-compose.yml restart caddy
 
 - **The music library.** `./music-audio` and `./music` are content, not code.
   A bad rotation is fixed by `./scripts/indiegen-cycle.sh` with a known seed, or
-  by restoring the backup (see `backup/`).
+  by restoring the runtime state (see [restore-drill.md](restore-drill.md)).
 - **Mario's rendered segments.** `./data/host` is generated content. Delete the
   affected files and let the next hourly cycle regenerate them.
 - **A listener's credential.** Tokens live in `secrets/tokens.txt` and

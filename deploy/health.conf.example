@@ -1,0 +1,79 @@
+# health.conf.example - copy to ~/.config/radio-health/health.conf
+#
+# Plain KEY=VALUE. The file is parsed, never sourced, so it cannot run code.
+# Environment variables with the same name win over the file. Every key is
+# optional: an unset target is reported as SKIP, never as RED.
+#
+# chmod 600 ~/.config/radio-health/health.conf
+# (no secret belongs in this file: it holds addresses and paths only)
+
+# --- mainframe (the data plane) -------------------------------------------
+# Use the SSH config alias, or user@host. Leave empty to skip the mainframe
+# checks entirely: a workstation-only run is a valid run, not a failure.
+MAINFRAME_HOST=mainframe
+MAINFRAME_RADIO_DIR=/home/kbdejavu/servers/radio
+
+# Containers that must be Up. Because this runs over SSH, they are checked
+# where they live, not guessed from the workstation.
+MAINFRAME_CONTAINERS="radio-icecast radio-liquidsoap radio-mediamtx radio-caddy radio-indiegen"
+
+# Documented-optional: the compose file refuses to start cam without its video
+# device, so its absence is a device state (WARN), not a station failure.
+MAINFRAME_OPTIONAL_CONTAINERS="radio-cam"
+
+# Other stacks on the same host that are still expected to run. Empty this list
+# when a service is decommissioned instead of leaving a permanent RED.
+MAINFRAME_EXTRA_CONTAINERS="jellyfin"
+
+# The host writes data/status.json every five minutes. Older than this and the
+# probe itself is suspect (WARN).
+STATUS_MAX_AGE_S=900
+
+# The radio-job gate uses 92 C; the same number here so the two agree.
+MAINFRAME_TEMP_MAX_C=92
+
+# Optional: fail the deploy row when the host runs something other than this
+# commit. Leave empty to only report what is deployed.
+# RADIO_EXPECTED_SHA=
+
+# --- workstation (the control plane) --------------------------------------
+PROJECTS_ROOT=/home/you/Repositories
+CHECKOUT_DIRS="radio indiegenerator n3rv"
+CHECK_CI=1
+CHECK_CHECKOUTS=1
+ORG=The-Replacement
+REPOS="radio indiegenerator infra docs"
+
+# The OpenCode service publishes its own address in this file; the script reads
+# it instead of assuming a port. Override only to force a specific address.
+OPENCODE_STATE_DIR=/home/you/.local/state/opencode
+# OPENCODE_SERVICE_URL=http://127.0.0.1:49374
+
+# `opencode mcp list` is resolved from this directory: V2 reads the project's
+# configuration, so the list is only meaningful from a real checkout.
+MCP_WORKDIR=/home/you/Repositories/radio
+# MCP servers whose absence breaks the workflow. Remote servers that need OAuth
+# are deliberately absent: "needs authentication" on an optional server is not
+# a failure.
+REQUIRED_MCP="n3rv-memory n3rv-hub n3rv-exec github fetch context7 codebase-memory-mcp searxng xerj open-websearch"
+MCP_TIMEOUT=120
+
+# The hub address is read from the project's a2a-config.yaml unless set here.
+N3RV_A2A_CONFIG=/home/you/Repositories/n3rv/.n3rv/a2a-config.yaml
+# N3RV_HUB_ADDR=127.0.0.1:19820
+
+# SearxNG listens on the mainframe behind a loopback SSH forward: this is the
+# local end of that forward, which is the path the workstation actually uses.
+SEARXNG_URL=http://127.0.0.1:8080
+XERJ_URL=http://127.0.0.1:9200
+
+# --- credentials ----------------------------------------------------------
+# One `cf-*` file per token, mode 0600. Only status and expiry are printed.
+CRED_DIR=/home/you/.config/radio
+# Needed to verify account-scoped tokens against a read their policy allows.
+# CF_ACCOUNT_ID=
+CRED_EXPIRY_WARN_DAYS=30
+
+# --- timeouts (seconds) ---------------------------------------------------
+SSH_TIMEOUT=20
+HTTP_TIMEOUT=8

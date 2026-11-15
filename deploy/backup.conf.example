@@ -1,0 +1,52 @@
+# backup.conf.example - copy to ~/.config/radio-backup/backup.conf
+#
+# Plain KEY=VALUE. The file is parsed, never sourced: it sits next to the
+# repository password and must not be able to run code.
+# chmod 600 ~/.config/radio-backup/backup.conf
+#
+# No password belongs in this file. Point RESTIC_PASSWORD_FILE at a 0600 file
+# (see runbooks/backup.md) and let restic read it.
+
+# --- repository (required) ------------------------------------------------
+# The repository must already exist: this script never runs `restic init`.
+# Any restic backend works. Examples:
+#   local disk     /mnt/backup/restic-repo
+#   over SSH       sftp:backup@host:/srv/restic/radio
+#   object store   s3:https://.../radio
+RESTIC_REPOSITORY=/mnt/backup/restic-repo
+RESTIC_PASSWORD_FILE=/home/you/.config/radio-backup/restic-password
+# Or, instead of a file:
+# RESTIC_PASSWORD_COMMAND="secret-tool lookup service restic key radio"
+
+# --- sources --------------------------------------------------------------
+# Each project's .n3rv is discovered under this root; a new project needs no
+# edit here.
+PROJECTS_ROOT=/home/you/Repositories
+
+# One live SQLite file, copied with the SQLite backup API so the snapshot is
+# consistent while the service is running. Unset to skip.
+OPENCODE_DATA_DIR=/home/you/.local/share/opencode
+
+# Indexes plus the auth/idp state next to them. Unset to skip.
+XERJ_DATA_DIR=/home/you/xerj-data
+
+# Radio runtime data: .env, secrets/, config/, caddy/tokens.caddy and
+# data/indiegen/. Never music-audio/, music/, data/host/ or data/cam/.
+MAINFRAME_HOST=mainframe
+MAINFRAME_RADIO_DIR=/home/kbdejavu/servers/radio
+
+# --- staging --------------------------------------------------------------
+# A scratch tree assembled before restic sees it, removed on success and kept
+# on failure. Needs room for a full OpenCode database copy (~1 GB).
+STAGE_DIR=/home/you/.local/state/radio-backup/stage
+
+# --- policy ---------------------------------------------------------------
+TAG=radio-state
+# `restic check` reads only metadata by default. A subset of the data is read
+# too: 1/50 of the packs on every run, a full read on the monthly drill.
+VERIFY_SUBSET=1/50
+KEEP_DAILY=7
+KEEP_WEEKLY=4
+KEEP_MONTHLY=6
+KEEP_YEARLY=2
+SSH_TIMEOUT=900

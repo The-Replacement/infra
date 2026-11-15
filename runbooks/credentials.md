@@ -57,5 +57,8 @@ Useful IDs on this account:
 
 ## Reading the state without a secret
 
-`deploy/health.sh` verifies every `cf-*` file under `~/.config/radio/` and prints
-`OK`/`RED` per credential. It never prints a value.
+`deploy/health.sh` verifies every `cf-*` file under `~/.config/radio/`
+(configurable as `CRED_DIR`) and prints `OK`/`WARN`/`RED` per credential. It
+never prints a value. A token inside `CRED_EXPIRY_WARN_DAYS` of expiring — or
+that cannot be classified as a user token without `CF_ACCOUNT_ID` — is `WARN`,
+not `RED`: an expiry date is information, not an outage.
