@@ -1,0 +1,25 @@
+schema: 1
+project:
+  name: infra
+  stack: generic
+components:
+  agents: []
+  skills: []
+  commands: []
+  hooks: []
+detection:
+  structure:
+    has_src_dir: false
+    has_tests_dir: false
+    has_docs_dir: false
+    has_scripts_dir: false
+    has_web_files: false
+    entry_points: []
+    key_dirs:
+    - deploy
+    - runbooks
+  frameworks: []
+  tools: []
+mcp:
+  servers: []
+board: null
