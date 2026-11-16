@@ -1,4 +1,4 @@
-schema: 1
+schema: 2
 project:
   name: infra
   stack: generic
@@ -20,6 +20,13 @@ detection:
     - runbooks
   frameworks: []
   tools: []
+  requires_python: null
 mcp:
   servers: []
+deployment:
+  target: mainframe
+tiers:
+  runtime: true
+  spec_kit: true
+  tooling: true
 board: null
