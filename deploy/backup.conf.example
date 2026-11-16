@@ -4,6 +4,11 @@
 # repository password and must not be able to run code.
 # chmod 600 ~/.config/radio-backup/backup.conf
 #
+# Spelling matters: an unknown key is warned about by name (with the closest
+# known key) and then ignored — which silently changes what the backup
+# covers. A warning here is a wrong backup waiting to happen; fix it before
+# the next run.
+#
 # No password belongs in this file. Point RESTIC_PASSWORD_FILE at a 0600 file
 # (see runbooks/backup.md) and let restic read it.
 
@@ -39,6 +44,10 @@ MAINFRAME_RADIO_DIR=/home/kbdejavu/servers/radio
 # A scratch tree assembled before restic sees it, removed on success and kept
 # on failure. Needs room for a full OpenCode database copy (~1 GB).
 STAGE_DIR=/home/you/.local/state/radio-backup/stage
+
+# Debug only: keep the staging tree even when the run succeeds. The tree is
+# about the size of the OpenCode database; set it only while inspecting a run.
+#KEEP_STAGE=0
 
 # --- policy ---------------------------------------------------------------
 TAG=radio-state

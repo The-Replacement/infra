@@ -11,6 +11,7 @@ agent with a key to it.
 |---|---|
 | `health.sh` | One command that answers "is the stack green?" across the workstation control plane and the mainframe data plane. Config in `~/.config/radio-health/health.conf` (template: `health.conf.example`); `--self-test` checks the parsers offline. |
 | `backup.sh` | Encrypted restic backup of the state that is not in git: `.n3rv` memory, the OpenCode database, the radio runtime config/state, the XERJ data directory. Modes: `plan`, `backup`, `snapshots`, `check`, `restore-dry-run`. Config in `~/.config/radio-backup/backup.conf` (template: `backup.conf.example`). |
+| `tests/test-backup.sh` | Offline tests for `backup.sh` against a stubbed restic: config-key warnings, staging guards, the malformed-SQLite report. Run it before touching `backup.sh`. |
 | `audit-mainframe.sh` | Read-only inventory of the host: hardware, thermal, memory, systemd, Docker, cron, disk, network. Run it first. |
 | `measure-runtime.sh` | Samples per-container CPU/memory for a bounded window while the stack runs. Produces the input for the resource budget. |
 | `compose.env.template` | The variable names the radio stack needs, with no values. |

@@ -92,16 +92,49 @@ CONFIG_FILE=${BACKUP_CONFIG:-${XDG_CONFIG_HOME:-$HOME/.config}/radio-backup/back
 CONFIG_KEYS="RESTIC_REPOSITORY RESTIC_PASSWORD_FILE RESTIC_PASSWORD_COMMAND
 PROJECTS_ROOT OPENCODE_DATA_DIR XERJ_DATA_DIR MAINFRAME_HOST
 MAINFRAME_RADIO_DIR STAGE_DIR TAG VERIFY_SUBSET KEEP_DAILY KEEP_WEEKLY
-KEEP_MONTHLY KEEP_YEARLY SSH_TIMEOUT"
+KEEP_MONTHLY KEEP_YEARLY SSH_TIMEOUT KEEP_STAGE"
 # The allowlist is written across lines for readability; the matcher below
 # needs it as one space-separated string.
 CONFIG_KEYS=${CONFIG_KEYS//$'\n'/ }
+CONFIG_UNKNOWN_KEYS=""
+
+# closest_key KEY
+# The known key sharing the longest prefix with KEY, so a typo gets named,
+# not just ignored (infra#9). A known key contained inside the unknown one
+# (RESTIC_REPOSITORY inside MY_RESTIC_REPOSITORY) counts as a full match.
+# Prints nothing when nothing is close enough to suggest.
+closest_key() {
+  local want=${1^^} key best="" bestlen=0 k n i
+  for key in $CONFIG_KEYS; do
+    k=${key^^}
+    n=0
+    case "$want" in
+      *"$k"*) n=${#k} ;;
+    esac
+    if [ "$n" -eq 0 ]; then
+      i=0
+      while [ "$i" -lt "${#want}" ] && [ "$i" -lt "${#k}" ] &&
+        [ "${want:i:1}" = "${k:i:1}" ]; do
+        i=$((i + 1))
+      done
+      n=$i
+    fi
+    if [ "$n" -gt "$bestlen" ]; then
+      bestlen=$n
+      best=$key
+    fi
+  done
+  [ "$bestlen" -ge 4 ] && printf '%s' "$best"
+}
 
 # read_config FILE
 # Plain KEY=VALUE, parsed and never sourced: this file sits next to the
 # repository password, and it must not be able to run code.
+# Unknown keys do not fail the run, but they are collected and reported by
+# name with the closest known key: an ignored key is a silently different
+# backup (infra#9).
 read_config() {
-  local file=$1 line key value
+  local file=$1 line key value unknown suggestion
   [ -f "$file" ] || return 1
   while IFS= read -r line || [ -n "$line" ]; do
     line=${line%$'\r'}
@@ -112,7 +145,12 @@ read_config() {
     key=${key//[[:space:]]/}
     case " $CONFIG_KEYS " in
       *" $key "*) ;;
-      *) continue ;;
+      *)
+        if [ -n "$key" ]; then
+          CONFIG_UNKNOWN_KEYS+="$key"$'\n'
+        fi
+        continue
+        ;;
     esac
     case "$value" in
       \"*\") value=${value#\"}; value=${value%\"} ;;
@@ -121,6 +159,15 @@ read_config() {
     [ -n "${!key:-}" ] && continue
     printf -v "$key" '%s' "$value"
   done < "$file"
+  while IFS= read -r unknown; do
+    [ -n "$unknown" ] || continue
+    suggestion=$(closest_key "$unknown")
+    if [ -n "$suggestion" ]; then
+      warn "unknown key in backup.conf: $unknown (closest known: $suggestion)"
+    else
+      warn "unknown key in backup.conf: $unknown"
+    fi
+  done <<<"$CONFIG_UNKNOWN_KEYS"
   return 0
 }
 
@@ -151,6 +198,14 @@ LOG=${BACKUP_LOG:-${XDG_STATE_HOME:-$HOME/.local/state}/radio-backup/backup.log}
 log() {
   mkdir -p "$(dirname "$LOG")"
   printf '%s %s\n' "$(date -u +%FT%TZ)" "$*" | tee -a "$LOG"
+}
+
+# Warnings go to stderr and to the log: a typo that silently changed what the
+# backup covers must survive the scroll (infra#9).
+warn() {
+  printf 'backup: warning: %s\n' "$*" >&2
+  mkdir -p "$(dirname "$LOG")"
+  printf '%s warning: %s\n' "$(date -u +%FT%TZ)" "$*" >>"$LOG"
 }
 
 have() { command -v "$1" >/dev/null 2>&1; }
@@ -226,10 +281,13 @@ copy_tree() {
 # sqlite_snapshot SRC DST
 # A live SQLite file copied byte for byte is a torn file. The backup API copies
 # a consistent image under WAL, and quick_check proves the copy is readable.
+# On failure the reason is printed on stdout and the function returns 1; the
+# caller collects every failure and reports them all once, so one run names
+# every damaged file instead of dying on the first (infra#14).
 sqlite_snapshot() {
-  local src=$1 dst=$2
+  local src=$1 dst=$2 detail
   mkdir -p "$(dirname "$dst")"
-  python3 - "$src" "$dst" <<'PY'
+  if detail=$(python3 - "$src" "$dst" 2>&1 <<'PY'
 import sqlite3
 import sys
 
@@ -239,30 +297,48 @@ with open(src, "rb") as handle:
 if magic != b"SQLite format 3\x00":
     # Not a database, despite the extension: leave the staged copy alone.
     raise SystemExit(0)
-source = sqlite3.connect(src, timeout=30)
-target = sqlite3.connect(dst)
 try:
-    source.backup(target)
-    row = target.execute("PRAGMA quick_check").fetchone()
-finally:
-    target.close()
-    source.close()
+    source = sqlite3.connect(src, timeout=30)
+    target = sqlite3.connect(dst)
+    try:
+        source.backup(target)
+        row = target.execute("PRAGMA quick_check").fetchone()
+    finally:
+        target.close()
+        source.close()
+except sqlite3.Error as exc:
+    sys.stderr.write("%s\n" % exc)
+    raise SystemExit(1)
 if not row or row[0] != "ok":
-    sys.stderr.write("sqlite quick_check failed for %s: %r\n" % (src, row))
+    sys.stderr.write("quick_check: %s\n" % row[0])
     raise SystemExit(1)
 PY
+); then
+    return 0
+  fi
+  printf '%s' "$detail"
+  return 1
 }
+
+# SQLITE_FAILURES holds one entry per damaged source: "<path><TAB><reason>".
+SQLITE_FAILURES=()
 
 # normalize_sqlite STAGE_ROOT SOURCE_ROOT
 # Replace every staged SQLite copy with a consistent snapshot of the live file.
+# Failures are collected in SQLITE_FAILURES; the caller reports the complete
+# list once, after all staging has walked every source (infra#14).
 normalize_sqlite() {
-  local stage_root=$1 source_root=$2 file rel
+  local stage_root=$1 source_root=$2 file rel out
   while IFS= read -r -d '' file; do
     rel=${file#"$stage_root/"}
     [ -f "$source_root/$rel" ] || continue
-    sqlite_snapshot "$source_root/$rel" "$file"
+    if ! out=$(sqlite_snapshot "$source_root/$rel" "$file" 2>&1); then
+      SQLITE_FAILURES+=("$source_root/$rel"$'\t'"$out")
+    fi
   done < <(find "$stage_root" -type f \( -name '*.db' -o -name '*.sqlite3' \) -print0)
 }
+
+STAGED_PROJECTS=0
 
 stage_projects() {
   local dir name
@@ -273,6 +349,7 @@ stage_projects() {
     log "stage .n3rv: $name"
     copy_tree "$(dirname "$dir")" "$STAGE/workstation/projects/$name" ".n3rv"
     normalize_sqlite "$STAGE/workstation/projects/$name" "$(dirname "$dir")"
+    STAGED_PROJECTS=$((STAGED_PROJECTS + 1))
   done
 }
 
@@ -283,7 +360,10 @@ stage_opencode() {
     die "OpenCode database not found: $db (unset OPENCODE_DATA_DIR to skip it)"
   fi
   log "stage opencode: $db"
-  sqlite_snapshot "$db" "$STAGE/workstation/opencode/opencode.db"
+  local out
+  if ! out=$(sqlite_snapshot "$db" "$STAGE/workstation/opencode/opencode.db" 2>&1); then
+    SQLITE_FAILURES+=("$db"$'\t'"$out")
+  fi
 }
 
 stage_xerj() {
@@ -378,10 +458,39 @@ mode_backup() {
   mkdir -p "$STAGE"
   log "BEGIN backup to $RESTIC_REPOSITORY"
 
+  # Announce what is about to be staged, the way plan does: a backup that
+  # quietly skips a source looks like coverage and is not (infra#9).
+  printf 'sources:\n'
+  check_sources
+
   stage_projects
   stage_opencode
   stage_xerj
   stage_mainframe
+
+  # The project memory is the primary source; a config typo that matches zero
+  # projects must not pass as a successful backup of everything else (infra#9).
+  if [ "$STAGED_PROJECTS" -eq 0 ]; then
+    if [ ! -d "$PROJECTS_ROOT" ]; then
+      die "PROJECTS_ROOT does not exist: $PROJECTS_ROOT; refusing to snapshot without the project memory (fix backup.conf)"
+    fi
+    die "PROJECTS_ROOT $PROJECTS_ROOT matched no project with a .n3rv directory; refusing to snapshot without the project memory (check backup.conf for a typo)"
+  fi
+
+  # One report, every damaged file (infra#14). Exit stays non-zero and the
+  # staging tree stays behind for inspection.
+  if [ "${#SQLITE_FAILURES[@]}" -gt 0 ]; then
+    local entry path reason
+    printf 'backup: sqlite quick_check failed for %d file(s):\n' \
+      "${#SQLITE_FAILURES[@]}" >&2
+    for entry in "${SQLITE_FAILURES[@]}"; do
+      path=${entry%%$'\t'*}
+      reason=${entry#*$'\t'}
+      printf '  %s\n' "$path" >&2
+      printf '%s\n' "$reason" | sed 's/^/    /' >&2
+    done
+    die 'repair: runbooks/backup.md, "When a SQLite source is malformed"'
+  fi
 
   local files
   files=$(find "$STAGE" -type f | wc -l)
