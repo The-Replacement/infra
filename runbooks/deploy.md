@@ -17,8 +17,17 @@ repository on the box**:
 From a workstation with the host reachable:
 
 ```bash
-git push mainframe master
+# The branch is per repo, and it is whatever the box has checked out:
+git push mainframe master:master      # radio (its HEAD is on master)
+git push mainframe main:main          # indiegenerator (its HEAD is on main)
 ```
+
+The hook enforces this (infra#12): a push to a branch the box does not have
+checked out fails the hook, names the checked-out branch, builds nothing and
+restarts nothing — `updateInstead` cannot move the worktree for a foreign
+ref, so it is not a deploy. The deploy log carries the commit the worktree
+moved to. A rollback of `indiegenerator` therefore pushes
+`rollback/<what>:main`, not `:master`.
 
 `mainframe` is a *separate* remote, not a second push URL of `origin`. It was a
 second `pushurl` until 2026-11-13; that made every ordinary `git push origin`
