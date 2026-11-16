@@ -104,7 +104,7 @@ CONFIG_UNKNOWN_KEYS=""
 # (RESTIC_REPOSITORY inside MY_RESTIC_REPOSITORY) counts as a full match.
 # Prints nothing when nothing is close enough to suggest.
 closest_key() {
-  local want=${1^^} key best= bestlen=0 k n i
+  local want=${1^^} key best="" bestlen=0 k n i
   for key in $CONFIG_KEYS; do
     k=${key^^}
     n=0
