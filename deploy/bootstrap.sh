@@ -227,6 +227,29 @@ else
   fi
 fi
 
+# ---------------------------------------------------------------- systemd units (radio-batch.slice + timers)
+
+say "systemd units"
+UNITS_DIR="$REPO_DIR/infra/deploy/systemd"
+UNIT_FILES="radio-batch.slice radio-gc.service radio-gc.timer radio-verify.service radio-verify.timer radio-tts.service radio-tts.timer radio-render.service radio-render.timer radio-slot-weather.service radio-slot-weather.timer radio-slot-rss.service radio-slot-rss.timer radio-restart-signal.service radio-restart-signal.timer radio-heal.service radio-heal.timer"
+if [ "$DRY_RUN" = "1" ]; then
+  printf '   [dry] would install: %s\n' "$UNIT_FILES"
+else
+  for f in $UNIT_FILES; do
+    if [ -f "$UNITS_DIR/$f" ]; then
+      install -m 0644 "$UNITS_DIR/$f" "/etc/systemd/system/$f"
+    fi
+  done
+  systemctl daemon-reload
+  # Enable the timers (not the oneshot services). The slice is pulled in by the
+  # batch services via After=/Wants=; enable it too so it is active at boot.
+  systemctl enable --now radio-batch.slice 2>/dev/null || true
+  systemctl enable --now radio-gc.timer radio-verify.timer radio-tts.timer \
+    radio-render.timer radio-slot-weather.timer radio-slot-rss.timer \
+    radio-restart-signal.timer radio-heal.timer
+  info "systemd units installed and timers enabled"
+fi
+
 # ---------------------------------------------------------------- bring it up
 
 say "stack"

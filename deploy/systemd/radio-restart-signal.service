@@ -1,0 +1,12 @@
+[Unit]
+Description=Radio appliance library-rotation restart handler (restart-on-signal)
+Documentation=https://github.com/The-Replacement/docs/blob/main/autonomy/02-design.md
+After=docker.service
+
+[Service]
+Type=oneshot
+User=kbdejavu
+WorkingDirectory=/home/kbdejavu/servers/radio
+ExecStart=/home/kbdejavu/servers/radio/scripts/restart-on-signal.sh
+Nice=5
+TimeoutStartSec=30min

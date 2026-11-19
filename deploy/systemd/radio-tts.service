@@ -1,0 +1,13 @@
+[Unit]
+Description=Radio appliance Mario voice refresh (radio-job tts)
+Documentation=https://github.com/The-Replacement/docs/blob/main/autonomy/02-design.md
+After=docker.service radio-batch.slice
+
+[Service]
+Type=oneshot
+User=kbdejavu
+WorkingDirectory=/home/kbdejavu/servers/radio
+ExecStart=/home/kbdejavu/servers/radio/scripts/radio-job.sh tts
+Nice=10
+IOSchedulingClass=best-effort
+TimeoutStartSec=30min

@@ -1,0 +1,11 @@
+[Unit]
+Description=Thirty-minute news slot for the radio appliance
+
+[Timer]
+OnBootSec=7min
+OnUnitActiveSec=30min
+AccuracySec=1min
+Persistent=true
+
+[Install]
+WantedBy=timers.target
