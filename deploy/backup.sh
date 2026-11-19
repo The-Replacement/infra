@@ -383,10 +383,13 @@ stage_mainframe() {
   [ -n "$MAINFRAME_RADIO_DIR" ] || die "MAINFRAME_RADIO_DIR is not configured"
   log "stage mainframe: $MAINFRAME_HOST:$MAINFRAME_RADIO_DIR"
   mkdir -p "$STAGE/mainframe-radio"
-  timeout "$SSH_TIMEOUT" ssh -o BatchMode=yes -o ConnectTimeout=10 \
+  local archive="$STAGE/mainframe-radio.tar"
+  timeout "$SSH_TIMEOUT" ssh -o BatchMode=yes -o ConnectTimeout=10 -o LogLevel=ERROR \
     "$MAINFRAME_HOST" \
-    "cd '$MAINFRAME_RADIO_DIR' && tar -cf - --exclude='runs' --exclude='*.log' .env secrets config caddy/tokens.caddy data/indiegen" |
-    tar -xf - -C "$STAGE/mainframe-radio" --no-same-owner
+    "cd '$MAINFRAME_RADIO_DIR' && tar -cf - --exclude='runs' --exclude='*.log' .env secrets config caddy/tokens.caddy data/indiegen" \
+    > "$archive"
+  tar -xf "$archive" -C "$STAGE/mainframe-radio" --no-same-owner
+  rm -f "$archive"
 }
 
 check_sources() {
