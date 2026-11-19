@@ -101,7 +101,7 @@ cd "$R"/projects/radio      # a real project with its .n3rv in place
 n3rv memory stats
 ```
 
-Compare the counts with the live project (`cd ~/Repositories/radio && n3rv
+Compare the counts with the live project (`cd ~/Orgs/The-Replacement/radio && n3rv
 memory stats`). Equal counts and a fresh newest entry = the memory survived.
 Then search for something you know exists:
 

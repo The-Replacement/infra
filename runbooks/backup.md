@@ -108,7 +108,7 @@ Host-local units are not committed, because nothing in this repository is
 deployed automatically. If you want a schedule, install a user unit that runs:
 
 ```bash
-ExecStart=%h/Repositories/infra/deploy/backup.sh backup
+ExecStart=%h/Orgs/The-Replacement/infra/deploy/backup.sh backup
 ```
 
 with `OnCalendar=*-*-* 03:15:00` and `Persistent=true`, the same shape as the

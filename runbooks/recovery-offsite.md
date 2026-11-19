@@ -39,8 +39,8 @@ openssl pkeyutl -encrypt -pubin -inkey newpub.pem \
   -in ~/.config/radio-backup/restic-password \
   -out restic-password.enc
 # replace repo copies:
-cp newpub.pem ~/Repositories/infra/deploy/recovery/public.pem
-cp restic-password.enc ~/Repositories/infra/deploy/recovery/restic-password.enc
+cp newpub.pem ~/Orgs/The-Replacement/infra/deploy/recovery/public.pem
+cp restic-password.enc ~/Orgs/The-Replacement/infra/deploy/recovery/restic-password.enc
 shred -u new.pem
 ```
 

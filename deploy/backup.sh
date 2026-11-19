@@ -340,17 +340,34 @@ normalize_sqlite() {
 
 STAGED_PROJECTS=0
 
-stage_projects() {
-  local dir name
-  [ -d "$PROJECTS_ROOT" ] || return 0
-  for dir in "$PROJECTS_ROOT"/*/.n3rv; do
-    [ -d "$dir" ] || continue
-    name=$(basename "$(dirname "$dir")")
-    log "stage .n3rv: $name"
-    copy_tree "$(dirname "$dir")" "$STAGE/workstation/projects/$name" ".n3rv"
-    normalize_sqlite "$STAGE/workstation/projects/$name" "$(dirname "$dir")"
-    STAGED_PROJECTS=$((STAGED_PROJECTS + 1))
+project_roots() {
+  local IFS=:
+  local -a roots
+  read -r -a roots <<< "$PROJECTS_ROOT"
+  local root
+  for root in "${roots[@]}"; do
+    [ -n "$root" ] && printf '%s\n' "$root"
   done
+}
+
+stage_projects() {
+  local root dir name
+  while IFS= read -r root; do
+    [ -n "$root" ] || continue
+    [ -d "$root" ] || continue
+    for dir in "$root"/*/.n3rv; do
+      [ -d "$dir" ] || continue
+      name=$(basename "$(dirname "$dir")")
+      if [ -d "$STAGE/workstation/projects/$name" ]; then
+        log "stage .n3rv: $name (from $root, duplicate name; skipping)"
+        continue
+      fi
+      log "stage .n3rv: $name"
+      copy_tree "$(dirname "$dir")" "$STAGE/workstation/projects/$name" ".n3rv"
+      normalize_sqlite "$STAGE/workstation/projects/$name" "$(dirname "$dir")"
+      STAGED_PROJECTS=$((STAGED_PROJECTS + 1))
+    done
+  done < <(project_roots)
 }
 
 stage_opencode() {
@@ -383,20 +400,31 @@ stage_mainframe() {
   [ -n "$MAINFRAME_RADIO_DIR" ] || die "MAINFRAME_RADIO_DIR is not configured"
   log "stage mainframe: $MAINFRAME_HOST:$MAINFRAME_RADIO_DIR"
   mkdir -p "$STAGE/mainframe-radio"
-  timeout "$SSH_TIMEOUT" ssh -o BatchMode=yes -o ConnectTimeout=10 \
+  local archive="$STAGE/mainframe-radio.tar"
+  timeout "$SSH_TIMEOUT" ssh -o BatchMode=yes -o ConnectTimeout=10 -o LogLevel=ERROR \
     "$MAINFRAME_HOST" \
-    "cd '$MAINFRAME_RADIO_DIR' && tar -cf - --exclude='runs' --exclude='*.log' .env secrets config caddy/tokens.caddy data/indiegen" |
-    tar -xf - -C "$STAGE/mainframe-radio" --no-same-owner
+    "cd '$MAINFRAME_RADIO_DIR' && tar -cf - --exclude='runs' --exclude='*.log' .env secrets config caddy/tokens.caddy data/indiegen" \
+    > "$archive"
+  tar -xf "$archive" -C "$STAGE/mainframe-radio" --no-same-owner
+  rm -f "$archive"
 }
 
 check_sources() {
-  local dir
-  if [ -d "$PROJECTS_ROOT" ]; then
-    for dir in "$PROJECTS_ROOT"/*/.n3rv; do
-      [ -d "$dir" ] && printf '  .n3rv       %s\n' "$dir"
-    done
-  else
-    printf '  .n3rv       (no %s)\n' "$PROJECTS_ROOT"
+  local root dir found_root
+  found_root=0
+  while IFS= read -r root; do
+    [ -n "$root" ] || continue
+    if [ -d "$root" ]; then
+      found_root=1
+      for dir in "$root"/*/.n3rv; do
+        [ -d "$dir" ] && printf '  .n3rv       %s\n' "$dir"
+      done
+    else
+      printf '  .n3rv       (no %s)\n' "$root"
+    fi
+  done < <(project_roots)
+  if [ "$found_root" -eq 0 ] && [ -z "$(project_roots)" ]; then
+    printf '  .n3rv       (no PROJECTS_ROOT)\n'
   fi
   if [ -n "$OPENCODE_DATA_DIR" ]; then
     printf '  opencode    %s\n' "$OPENCODE_DATA_DIR/opencode.db"
@@ -471,7 +499,13 @@ mode_backup() {
   # The project memory is the primary source; a config typo that matches zero
   # projects must not pass as a successful backup of everything else (infra#9).
   if [ "$STAGED_PROJECTS" -eq 0 ]; then
-    if [ ! -d "$PROJECTS_ROOT" ]; then
+    local root any_existing_roots
+    any_existing_roots=0
+    while IFS= read -r root; do
+      [ -n "$root" ] || continue
+      [ -d "$root" ] && any_existing_roots=1
+    done < <(project_roots)
+    if [ "$any_existing_roots" -eq 0 ]; then
       die "PROJECTS_ROOT does not exist: $PROJECTS_ROOT; refusing to snapshot without the project memory (fix backup.conf)"
     fi
     die "PROJECTS_ROOT $PROJECTS_ROOT matched no project with a .n3rv directory; refusing to snapshot without the project memory (check backup.conf for a typo)"
@@ -562,7 +596,7 @@ mode_restore_dry_run() {
   rm -rf "$scratch"
 
   printf '\nwhere the files go when you restore for real:\n'
-  printf '  <snapshot>/workstation/projects/<project>/.n3rv  ->  %s/<project>/.n3rv\n' "$PROJECTS_ROOT"
+  printf '  <snapshot>/workstation/projects/<project>/.n3rv  ->  <project>/.n3rv under configured PROJECTS_ROOT (%s)\n' "$PROJECTS_ROOT"
   printf '  <snapshot>/workstation/opencode/opencode.db      ->  %s/opencode.db\n' "$OPENCODE_DATA_DIR"
   printf '  <snapshot>/workstation/xerj-data                 ->  %s\n' "$XERJ_DATA_DIR"
   printf '  <snapshot>/mainframe-radio                       ->  %s:%s\n' \

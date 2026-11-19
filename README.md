@@ -4,8 +4,22 @@ Deploy, monitoring and runbooks for The-Replacement projects.
 
 The production radio host is a single always-on Ubuntu Server box on the LAN
 (`192.168.100.148`, hostname `mainframe`). It runs the radio stack as Docker
-Compose. It has been offline since it overheated and hit memory limits; see
-`docs/mainframe/` for the audit and the appliance plan.
+Compose and serves `radio.daza.ar`.
+
+Status, checked 2026-11-18: **online**, up 4 days, 8 cores, 31 GB RAM with
+1.9 GB used, load average 0.02, and no thermal-throttling events in `dmesg`.
+
+Two corrections to what this paragraph used to say. It claimed the box "has
+been offline since it overheated and hit memory limits" — it was not, and the
+claim was acted on as if it were true. It also pointed at `docs/mainframe/`,
+which does not exist in this repository. Both are removed rather than left to
+mislead the next reader.
+
+The cost of that stale line is concrete: a second, complete radio stack was
+running on the laptop alongside this one, both encoding different tracks, until
+the laptop's localhost-only development stack was stopped on 2026-11-18. A
+status claim in this file is a fact about production; date it and re-check it
+before planning around it.
 
 ## Layout
 

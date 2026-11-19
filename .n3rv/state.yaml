@@ -3,10 +3,48 @@ project:
   name: infra
   stack: generic
 components:
-  agents: []
-  skills: []
-  commands: []
-  hooks: []
+  agents:
+  - git-ops
+  - github-ops
+  - n3rv
+  - n3rv-scout
+  - n3rv-sensor
+  - project-ops
+  - sdd-archiver
+  - sdd-designer
+  - sdd-explorer
+  - sdd-proposer
+  - sdd-speccer
+  - sdd-task-planner
+  - sdd-verifier
+  skills:
+  - code
+  - commits
+  - git-ops
+  - github-ops
+  - judgment-day
+  - project-board
+  - sdd-apply
+  - sdd-archive
+  - sdd-design
+  - sdd-explore
+  - sdd-propose
+  - sdd-spec
+  - sdd-spec-kit-plan
+  - sdd-spec-kit-spec
+  - sdd-spec-kit-tasks
+  - sdd-tasks
+  - sdd-verify
+  - testing
+  commands:
+  - handoff
+  - judgment-day
+  - new-satellite
+  - review
+  - sdd-new
+  - spec-kit
+  hooks:
+  - pre-push
 detection:
   structure:
     has_src_dir: false
@@ -24,7 +62,7 @@ detection:
 mcp:
   servers: []
 deployment:
-  target: mainframe
+  target: none
 tiers:
   runtime: true
   spec_kit: true
