@@ -72,7 +72,7 @@ CONFIG_FILE=${HEALTH_CONFIG:-${XDG_CONFIG_HOME:-$HOME/.config}/radio-health/heal
 # inert instead of dangerous (and the file cannot reassign PATH).
 CONFIG_KEYS="MAINFRAME_HOST MAINFRAME_RADIO_DIR MAINFRAME_CONTAINERS
 MAINFRAME_OPTIONAL_CONTAINERS MAINFRAME_EXTRA_CONTAINERS STATUS_MAX_AGE_S
-MAINFRAME_TEMP_MAX_C RADIO_EXPECTED_SHA PROJECTS_ROOT CHECKOUT_DIRS
+MAINFRAME_TEMP_MAX_C PROJECTS_ROOT CHECKOUT_DIRS
 CHECK_CHECKOUTS CHECK_CI ORG REPOS OPENCODE_STATE_DIR OPENCODE_SERVICE_URL
 MCP_WORKDIR REQUIRED_MCP MCP_TIMEOUT N3RV_A2A_CONFIG N3RV_HUB_ADDR XERJ_URL
 SEARXNG_URL CRED_DIR CF_ACCOUNT_ID CRED_EXPIRY_WARN_DAYS SSH_TIMEOUT
@@ -114,7 +114,6 @@ apply_defaults() {
   # Empty means "not configured", which is SKIP, not RED.
   MAINFRAME_HOST=${MAINFRAME_HOST:-}
   MAINFRAME_RADIO_DIR=${MAINFRAME_RADIO_DIR:-}
-  RADIO_EXPECTED_SHA=${RADIO_EXPECTED_SHA:-}
   OPENCODE_SERVICE_URL=${OPENCODE_SERVICE_URL:-}
   N3RV_HUB_ADDR=${N3RV_HUB_ADDR:-}
   CF_ACCOUNT_ID=${CF_ACCOUNT_ID:-}
@@ -590,10 +589,12 @@ mainframe_rows() {
     row_ok "containers" "required up"
   fi
 
-  # --- deploy state: what source is actually running here
-  if [ -n "${RADIO_EXPECTED_SHA:-}" ] && [ "${sha:0:12}" != "${RADIO_EXPECTED_SHA:0:12}" ]; then
-    row_warn "deploy" "running ${sha:0:12}, expected ${RADIO_EXPECTED_SHA:0:12}"
-  elif [ "$branch" = "detached" ]; then
+  # --- deploy state: what source this host is running
+  # This row reports; it does not judge agreement. Whether the running revision
+  # is the intended one needs GitHub, the manifest and the image labels side by
+  # side, which is `n3rv doctor`'s job (infra#3). A second expectation knob here
+  # would be a third opinion with nothing to disagree against.
+  if [ "$branch" = "detached" ]; then
     row_warn "deploy" "${sha:0:12} on a detached HEAD"
   elif [ "${dirty:-0}" -gt 0 ]; then
     row_warn "deploy" "${sha:0:12} on $branch, $dirty uncommitted file(s)"
@@ -834,6 +835,13 @@ self_test_mainframe() {
   expect "healthy: stream ok" "$out" 'OK.*stream' have
   expect "healthy: deploy ok" "$out" 'OK.*deploy' have
 
+  # A detached HEAD is a local state worth naming, and it is all this row can
+  # say: revision agreement is not decided here (infra#3).
+  text=$(mainframe_fixture "$now" "$(date -u +%FT%TZ)" | sed 's/^branch=master/branch=detached/')
+  out=$(run_fixture "$text")
+  expect "detached: WARN deploy" "$out" 'WARN.*deploy.*detached' have
+  expect "detached: no RED" "$out" 'RED' lack
+
   # Liquidsoap restarting: the stream is down and the table must say so.
   text=$(mainframe_fixture "$now" "$(date -u +%FT%TZ)" |
     sed 's/^container=radio-liquidsoap|.*/container=radio-liquidsoap|Restarting (1) 2 seconds ago/; s/^icecast=.*/icecast=/; s/"flowing":true/"flowing":false/')
@@ -866,6 +874,9 @@ self_test_topology() {
   # Split the literals so this check does not match itself.
   expect "no retired EPG timer" "$(grep -c 'epg-re''grab' "$src")" '^0$' have
   expect "no local Jellyfin URL" "$(grep -c '127.0.0.1:80''96' "$src")" '^0$' have
+  # Revision agreement belongs to one owner. A knob here would be a second
+  # expectation with no counterpart to disagree with (infra#3).
+  expect "no expected-sha second judge" "$(grep -c 'RADIO_EXPECTED_''SHA' "$src")" '^0$' have
 }
 
 self_test() {

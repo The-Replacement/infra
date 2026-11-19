@@ -32,9 +32,10 @@ STATUS_MAX_AGE_S=900
 # The radio-job gate uses 92 C; the same number here so the two agree.
 MAINFRAME_TEMP_MAX_C=92
 
-# Optional: fail the deploy row when the host runs something other than this
-# commit. Leave empty to only report what is deployed.
-# RADIO_EXPECTED_SHA=
+# This file deliberately carries no "expected revision". Agreeing that the host
+# runs the intended commit needs GitHub, the deploy manifest and the image
+# labels side by side: that is `n3rv doctor`'s verdict (infra#3), not a key an
+# operator can pin here and quietly disagree with.
 
 # --- workstation (the control plane) --------------------------------------
 PROJECTS_ROOT=/home/you/Repositories
