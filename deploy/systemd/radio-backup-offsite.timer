@@ -1,0 +1,10 @@
+[Unit]
+Description=Weekly off-house archive of radio-state (encrypted)
+
+[Timer]
+OnCalendar=Sun *-*-* 04:00:00
+Persistent=true
+RandomizedDelaySec=600
+
+[Install]
+WantedBy=timers.target

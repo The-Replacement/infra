@@ -10,6 +10,8 @@
 #   - every malformed SQLite file is reported in one run, not one per run
 #   - an empty MAINFRAME_HOST still skips the mainframe silently
 #   - plan mode keeps working offline
+#   - kept failure stages are capped, not accumulated (infra#25)
+#   - no shipped unit sets PrivateTmp, which breaks ssh (infra#25)
 #
 # Run: ./deploy/tests/test-backup.sh
 # Exit: 0 all green, 1 something failed.
@@ -267,6 +269,56 @@ BACKUP_CONFIG=$T/conf BACKUP_LOG=$T/backup.log \
   expect_grep "$T/out.stdout" 'No repository write happens in plan mode.' \
     "plan footer"
 ) && status=0 || status=$?
+test_end "$status"
+
+# --- 9. kept failure stages are capped --------------------------------------
+test_start "kept stages are pruned to the newest STAGE_KEEP_FAILED"
+fixture
+mkdir -p "$T/state/stage/run-20260101T000000Z" \
+  "$T/state/stage/run-20260102T000000Z" \
+  "$T/state/stage/run-20260103T000000Z"
+make_corrupt_db "$T/opencode/opencode.db"
+run_backup "" && status=1 || status=$?
+(
+  set -e
+  expect_grep "$T/out.stderr" 'staging kept at' "failure keeps the new stage"
+  expect_grep "$T/out.stderr" 'pruning old kept stage' "older stages pruned"
+  [ -d "$T/state/stage/run-20260101T000000Z" ] && {
+    say "  oldest stage should have been pruned"
+    exit 1
+  }
+  [ -d "$T/state/stage/run-20260102T000000Z" ] && {
+    say "  second-oldest stage should have been pruned"
+    exit 1
+  }
+  [ -d "$T/state/stage/run-20260103T000000Z" ] || {
+    say "  the second-newest stage must survive (STAGE_KEEP_FAILED=2)"
+    exit 1
+  }
+  count=$(find "$T/state/stage" -mindepth 1 -maxdepth 1 -type d -name 'run-*' | wc -l)
+  [ "$count" -eq 2 ] || {
+    say "  expected 2 kept stages, found $count"
+    find "$T/state/stage" -mindepth 1 -maxdepth 1 -printf '  | %f\n'
+    exit 1
+  }
+) && status=0 || status=$?
+test_end "$status"
+
+# --- 10. no shipped unit may set PrivateTmp --------------------------------
+# PrivateTmp on an unprivileged user unit forces a uid-mapped user namespace
+# where root-owned files read back as nobody; ssh then refuses to read its own
+# config and the nightly backup fails silently (infra#25). This is a guard,
+# not a style rule: it can only come back by accident.
+test_start "shipped units do not set PrivateTmp"
+unit_dir=$SCRIPT_DIR/../systemd
+status=0
+for unit in "$unit_dir"/*.service; do
+  [ -f "$unit" ] || continue
+  if grep -qE '^[[:space:]]*PrivateTmp=' "$unit"; then
+    say "  $(basename "$unit") sets PrivateTmp; see infra#25"
+    status=1
+  fi
+done
 test_end "$status"
 
 say ""

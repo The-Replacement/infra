@@ -1,0 +1,14 @@
+[Unit]
+Description=Off-house mirror of the radio-state restic repo (weekly, encrypted)
+After=local-fs.target
+
+[Service]
+Type=oneshot
+# No PrivateTmp=yes: see radio-backup.service. A uid-mapped user namespace
+# makes root-owned files look like nobody and every ownership check fails.
+UMask=0077
+NoNewPrivileges=yes
+Nice=10
+IOSchedulingClass=idle
+TimeoutStartSec=2h
+ExecStart=%h/Orgs/The-Replacement/infra/deploy/offsite-sync.sh github

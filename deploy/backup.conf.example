@@ -49,6 +49,11 @@ STAGE_DIR=/home/you/.local/state/radio-backup/stage
 # about the size of the OpenCode database; set it only while inspecting a run.
 #KEEP_STAGE=0
 
+# How many failed-run staging trees to keep around. One explains a failure;
+# an uncapped pile is a multi-gigabyte disk leak (infra#25). The newest N are
+# kept, older ones are deleted as the next failure lands. Minimum 1.
+STAGE_KEEP_FAILED=2
+
 # --- policy ---------------------------------------------------------------
 TAG=radio-state
 # `restic check` reads only metadata by default. A subset of the data is read

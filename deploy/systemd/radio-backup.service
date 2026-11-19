@@ -1,0 +1,21 @@
+[Unit]
+Description=Encrypted radio-state backup plus a LAN mirror on the box
+Documentation=file://%h/Orgs/The-Replacement/infra/runbooks/backup.md
+After=local-fs.target
+OnFailure=radio-backup-alert.service
+
+[Service]
+Type=oneshot
+# PrivateTmp=yes is deliberately absent. Mounting a private /tmp for an
+# unprivileged systemd --user unit requires a user namespace where only the
+# caller's uid is mapped, so every root-owned file reads back as nobody
+# (65534). ssh checks the owner of /etc/ssh/ssh_config.d/* and refuses with
+# "Bad owner or permissions"; the backup failed that way for five nights
+# (infra#25). Nothing in backup.sh needs /tmp: staging uses STAGE_DIR and
+# restore-check honors TMPDIR.
+UMask=0077
+NoNewPrivileges=yes
+Nice=10
+IOSchedulingClass=idle
+TimeoutStartSec=2h
+ExecStart=/bin/sh -c '%h/Orgs/The-Replacement/infra/deploy/backup.sh backup && %h/Orgs/The-Replacement/infra/deploy/offsite-sync.sh box'
