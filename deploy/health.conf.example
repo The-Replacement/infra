@@ -51,7 +51,7 @@ OPENCODE_STATE_DIR=/home/you/.local/state/opencode
 
 # `opencode mcp list` is resolved from this directory: V2 reads the project's
 # configuration, so the list is only meaningful from a real checkout.
-MCP_WORKDIR=/home/you/Repositories/radio
+MCP_WORKDIR=/home/you/Orgs/The-Replacement/radio
 # MCP servers whose absence breaks the workflow. Remote servers that need OAuth
 # are deliberately absent: "needs authentication" on an optional server is not
 # a failure.
@@ -59,7 +59,7 @@ REQUIRED_MCP="n3rv-memory n3rv-hub n3rv-exec github fetch context7 codebase-memo
 MCP_TIMEOUT=120
 
 # The hub address is read from the project's a2a-config.yaml unless set here.
-N3RV_A2A_CONFIG=/home/you/Repositories/n3rv/.n3rv/a2a-config.yaml
+N3RV_A2A_CONFIG=/home/you/Orgs/The-Replacement/n3rv/.n3rv/a2a-config.yaml
 # N3RV_HUB_ADDR=127.0.0.1:19820
 
 # SearxNG listens on the mainframe behind a loopback SSH forward: this is the
