@@ -24,9 +24,9 @@ RESTIC_PASSWORD_FILE=/home/you/.config/radio-backup/restic-password
 # RESTIC_PASSWORD_COMMAND="secret-tool lookup service restic key radio"
 
 # --- sources --------------------------------------------------------------
-# Each project's .n3rv is discovered under this root; a new project needs no
-# edit here.
-PROJECTS_ROOT=/home/you/Repositories
+# Each project's .n3rv is discovered under these roots (colon-separated);
+# a new project needs no edit here.
+PROJECTS_ROOT=/home/you/Repositories:/home/you/Orgs/The-Replacement
 
 # One live SQLite file, copied with the SQLite backup API so the snapshot is
 # consistent while the service is running. Unset to skip.
