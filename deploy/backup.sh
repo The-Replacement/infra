@@ -92,7 +92,7 @@ CONFIG_FILE=${BACKUP_CONFIG:-${XDG_CONFIG_HOME:-$HOME/.config}/radio-backup/back
 CONFIG_KEYS="RESTIC_REPOSITORY RESTIC_PASSWORD_FILE RESTIC_PASSWORD_COMMAND
 PROJECTS_ROOT OPENCODE_DATA_DIR XERJ_DATA_DIR MAINFRAME_HOST
 MAINFRAME_RADIO_DIR STAGE_DIR TAG VERIFY_SUBSET KEEP_DAILY KEEP_WEEKLY
-KEEP_MONTHLY KEEP_YEARLY SSH_TIMEOUT KEEP_STAGE"
+KEEP_MONTHLY KEEP_YEARLY SSH_TIMEOUT KEEP_STAGE STAGE_KEEP_FAILED"
 # The allowlist is written across lines for readability; the matcher below
 # needs it as one space-separated string.
 CONFIG_KEYS=${CONFIG_KEYS//$'\n'/ }
@@ -189,6 +189,7 @@ apply_defaults() {
   KEEP_YEARLY=${KEEP_YEARLY:-2}
   SSH_TIMEOUT=${SSH_TIMEOUT:-900}
   KEEP_STAGE=${KEEP_STAGE:-0}
+  STAGE_KEEP_FAILED=${STAGE_KEEP_FAILED:-2}
 }
 
 # ---------------------------------------------------------------- plumbing
@@ -252,6 +253,23 @@ assert_repository() {
 
 STAGE=""
 
+# prune_stages KEEP
+# A kept stage explains one failure. Left uncapped they accumulate: five of
+# them at ~1.1 GB each were sitting in STAGE_DIR, a disk leak wearing the
+# label "for inspection" (infra#25). Keep the newest KEEP run-* trees.
+# Names are run-<UTC timestamp>, so a reverse name sort is chronological.
+prune_stages() {
+  local keep=${1:-2} name
+  case "$keep" in '' | *[!0-9]*) keep=2 ;; esac
+  [ "$keep" -ge 1 ] || keep=1
+  find "$STAGE_DIR" -mindepth 1 -maxdepth 1 -type d -name 'run-*' -printf '%f\n' 2>/dev/null |
+    sort -r | tail -n "+$((keep + 1))" |
+    while IFS= read -r name; do
+      printf 'backup: pruning old kept stage %s\n' "$STAGE_DIR/$name" >&2
+      rm -rf "${STAGE_DIR:?}/$name"
+    done
+}
+
 cleanup() {
   local status=$?
   if [ -n "$STAGE" ] && [ -d "$STAGE" ]; then
@@ -259,6 +277,7 @@ cleanup() {
       rm -rf "$STAGE"
     else
       printf 'backup: staging kept at %s for inspection\n' "$STAGE" >&2
+      prune_stages "$STAGE_KEEP_FAILED"
     fi
   fi
   exit "$status"

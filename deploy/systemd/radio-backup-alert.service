@@ -1,0 +1,9 @@
+[Unit]
+Description=Alert when radio-state backup fails
+
+[Service]
+Type=oneshot
+# A failed backup that only shows up in `systemctl --user list-units` is a
+# failed backup nobody sees (infra#25). Keep the desktop notification and the
+# append-only log: whichever one the session actually reads.
+ExecStart=/bin/sh -c 'notify-send -u critical "radio-backup failed" "radio-backup.service failed. See: journalctl --user -u radio-backup.service -n 200" || true; printf "%s radio-backup failed\n" "$(date -Is)" >> %h/.local/state/radio-backup/failure.log'

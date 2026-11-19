@@ -100,20 +100,29 @@ workstation memory that contains none of it is worse than a failed one.
 Success looks like a snapshot line and `no errors were found` from `check`.
 Anything else is a failure: read the last lines of
 `~/.local/state/radio-backup/backup.log`. On failure the staging tree is kept
-and its path printed, so the file that broke it can be inspected.
+and its path printed, so the file that broke it can be inspected. Only the
+newest `STAGE_KEEP_FAILED` (default 2) trees are kept — each is about 1 GB, and
+an uncapped pile of them is a disk leak, not evidence.
 
-### Optional: nightly timer
+### Nightly timer
 
-Host-local units are not committed, because nothing in this repository is
-deployed automatically. If you want a schedule, install a user unit that runs:
+The units are committed in `deploy/systemd/` (`radio-backup.service`,
+`.timer`, `radio-backup-alert.service`, plus the weekly `radio-backup-offsite`
+pair) and install as **user** units — see `deploy/systemd/README.md`. Install,
+then run it once by hand: a timer that has never fired is a guess.
 
 ```bash
-ExecStart=%h/Orgs/The-Replacement/infra/deploy/backup.sh backup
+install -m 0644 deploy/systemd/radio-backup.* ~/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user enable --now radio-backup.timer
+systemctl --user start radio-backup.service
 ```
 
-with `OnCalendar=*-*-* 03:15:00` and `Persistent=true`, the same shape as the
-existing `backup-to-usb` units. Start it by hand once first: a timer that has
-never fired is a guess.
+Do not add `PrivateTmp=yes` to these units. In an unprivileged user unit it
+forces a uid-mapped user namespace where root-owned files read back as `nobody`,
+`ssh` refuses to read `/etc/ssh/ssh_config.d/*`, and the backup fails for 15
+hours before anyone notices (infra#25). `deploy/tests/test-backup.sh` enforces
+this.
 
 ## Inspect and verify
 
