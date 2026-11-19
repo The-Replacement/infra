@@ -49,6 +49,9 @@ jobs:
           for u in deploy/systemd/*.service; do
             cmd=$(grep -m1 '^ExecStart=' "$u" | cut -d= -f2- | awk '{print $1}')
             [ -n "$cmd" ] || continue
+            # The workstation units address the checkout as %h/Orgs/...; the
+            # runner's copy is not there, and systemd-analyze expands %h.
+            cmd=${cmd//\%h/$HOME}
             if [ -x "$cmd" ]; then continue; fi
             sudo mkdir -p "$(dirname "$cmd")"
             sudo touch "$cmd"
