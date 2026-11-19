@@ -1,0 +1,9 @@
+[Unit]
+Description=Radio batch work (indiegen, mario renders) — low priority vs. audio path
+Documentation=https://github.com/The-Replacement/docs/blob/main/autonomy/02-design.md
+
+[Slice]
+# Batch work must not starve the real-time encoder. 20 is the design value from
+# docs/autonomy/02-design.md §1 (radio-batch.slice CPUWeight=20).
+CPUWeight=20
+# Memory stays capped per-container (compose mem_limit); the slice only shapes CPU.

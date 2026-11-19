@@ -1,0 +1,12 @@
+[Unit]
+Description=Radio appliance self-heal ladder (radio-job heal)
+Documentation=https://github.com/The-Replacement/docs/blob/main/autonomy/02-design.md
+After=docker.service radio-verify.service
+
+[Service]
+Type=oneshot
+User=kbdejavu
+WorkingDirectory=/home/kbdejavu/servers/radio
+ExecStart=/home/kbdejavu/servers/radio/scripts/radio-job.sh heal
+Nice=5
+TimeoutStartSec=5min

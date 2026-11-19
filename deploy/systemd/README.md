@@ -6,6 +6,13 @@ Two jobs, deliberately separate from the deploy hook and from cron.
 |---|---|---|
 | `radio-gc.service` / `.timer` | Retention: build cache, images, journal, logs, run history | Nightly 04:30, persistent |
 | `radio-verify.service` / `.timer` | Probe the station, write `data/status.json` | Every 5 minutes, 3 minutes after boot |
+| `radio-tts.service` / `.timer` | Mario voice refresh (`radio-job tts`) | Hourly |
+| `radio-render.service` / `.timer` | Generator cycle (`radio-job render`) | Every 6 hours |
+| `radio-slot-weather.service` / `.timer` | Weather slot (`mario-slot weather`) | Every 10 minutes |
+| `radio-slot-rss.service` / `.timer` | News slot (`mario-slot rss`) | Every 30 minutes |
+| `radio-restart-signal.service` / `.timer` | Library-rotation restart handler | Every minute |
+| `radio-heal.service` / `.timer` | Self-heal ladder (`radio-job heal`) | Every 5 minutes |
+| `radio-batch.slice` | Low-priority slice for batch work (CPUWeight=20) | Always on |
 
 Both run as `kbdejavu` with `WorkingDirectory` in the radio checkout, so they use
 the same `.env`, the same Compose file and the same data as everything else. No

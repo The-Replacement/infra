@@ -1,0 +1,13 @@
+[Unit]
+Description=Radio appliance weather slot (mario-slot weather)
+Documentation=https://github.com/The-Replacement/docs/blob/main/autonomy/02-design.md
+After=docker.service radio-batch.slice
+
+[Service]
+Type=oneshot
+User=kbdejavu
+WorkingDirectory=/home/kbdejavu/servers/radio
+ExecStart=/home/kbdejavu/servers/radio/scripts/mario-slot.sh weather
+Nice=10
+IOSchedulingClass=best-effort
+TimeoutStartSec=10min
