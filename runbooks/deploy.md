@@ -93,7 +93,18 @@ docker compose -f ~/servers/radio/docker-compose.yml ps
 
 # memory did not move the wrong way
 free -m
+
+# the deploy record agrees with what is on disk and running
+ssh kbdejavu@192.168.100.148 'cd ~/servers/radio && python3 scripts/deploy_manifest.py verify'
 ```
+
+`verify` answers "does this host agree with its own deploy record": checkout,
+hook hash against the tracked script, image ids, revision labels. It does **not**
+answer "is this the intended GitHub revision" — that needs GitHub, the manifest
+and the labels compared in one verdict, which is `n3rv doctor`'s job once its
+runtime leg lands (infra#3). `deploy/health.sh` deliberately reports the running
+SHA without judging it: a third expectation pinned on the workstation would have
+nothing to disagree against.
 
 ## Rollback
 
