@@ -60,7 +60,16 @@ detection:
   tools: []
   requires_python: null
 mcp:
-  servers: []
+  servers:
+  - name: n3rv-hub
+    type: local
+    command:
+    - /home/estrocondoso/.local/share/mise/installs/python/3.14.8/bin/n3rv-hub
+    environment:
+      N3RV_AGENT_SOURCE: opencode
+      N3RV_AGENT_ID: infra
+    description: A2A hub, addressed as "infra" so other sessions can hand work off
+      by id (n3rv#35/#37). Source stays opencode for memory/agent scope.
 deployment:
   target: none
 tiers:
