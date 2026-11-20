@@ -203,27 +203,24 @@ fi
 
 # ---------------------------------------------------------------- scheduling
 
-say "cron"
-CRON_LINES="30 4 * * * $REPO_DIR/radio/scripts/radio-job.sh gc >/dev/null 2>&1
-*/5 * * * * $REPO_DIR/radio/scripts/radio-job.sh verify >/dev/null 2>&1
-* * * * * $REPO_DIR/radio/scripts/restart-on-signal.sh
-0 * * * * $REPO_DIR/radio/scripts/mario-refresh.sh"
+say "scheduler (systemd timers)"
+# Radio scheduling is owned by the systemd timers/units installed below (gc,
+# verify, tts, render, slot-weather, slot-rss, restart-signal, heal) plus
+# radio-batch.slice. Legacy cron lines for these jobs must not coexist with the
+# timers (double-runs). On a fresh bootstrap we install no radio cron entries;
+# on a box being cut over, remove any existing radio/mario-slot cron lines after
+# the timers are installed, enabled, and verified in the journal.
+LEGACY_CRON_RE='(radio-job\.sh|restart-on-signal\.sh|mario-refresh\.sh|mario-slot\.sh)'
 if [ "$DRY_RUN" = "1" ]; then
-  printf '   [dry] crontab for %s would contain:\n%s\n' "$USER_NAME" "$(printf '%s' "$CRON_LINES" | sed 's/^/     /')"
+  printf '   [dry] would leave no radio cron entries (systemd timers own scheduling)\n'
+  printf '   [dry] would warn if legacy cron matches: %s\n' "$LEGACY_CRON_RE"
 else
   CURRENT=$(crontab -l -u "$USER_NAME" 2>/dev/null || true)
-  ADDED=""
-  while IFS= read -r line; do
-    if printf '%s\n' "$CURRENT" | grep -Fqx "$line"; then
-      continue
-    fi
-    ADDED="$ADDED$line"$'\n'
-  done <<< "$CRON_LINES"
-  if [ -n "$ADDED" ]; then
-    { printf '%s\n' "$CURRENT"; printf '%s' "$ADDED"; } | crontab -u "$USER_NAME" -
-    info "installed $(printf '%s' "$ADDED" | grep -c .) new entries"
+  if printf '%s\n' "$CURRENT" | grep -Eq "$LEGACY_CRON_RE"; then
+    warn "legacy radio cron entries still present for $USER_NAME; retire them after verifying timers to avoid double-runs"
+    printf '%s\n' "$CURRENT" | grep -E "$LEGACY_CRON_RE" | sed 's/^/     cron: /'
   else
-    info "all entries present"
+    info "no legacy radio cron entries"
   fi
 fi
 
